@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://fune6900.github.io/fune.github.io/",
+  "homepage": "https://fune6900.github.io/myprof/",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
