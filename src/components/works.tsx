@@ -33,24 +33,25 @@ export const Works = () => {
                 alt="アニめぐる トップページ"
                 className="rounded-lg w-full h-auto"
               />
+              <h4 className="mt-4 text-2xl font-bold text-neon-white">
+                アニめぐる
+              </h4>
+              <p className="mt-2 text-neon-green break-words">
+                https://animeguru.jp/
+              </p>
+              <p className="mt-2 text-neon-white">
+                あなたの足で紡ぐ、作品と現実の交差点。アニめぐるは、アニメファン向けの聖地巡礼情報共有プラットフォームです。聖地巡礼の思い出を聖地メモとして共有しよう。
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="badge">Ruby</span>
+                <span className="badge">Ruby on Rails</span>
+                <span className="badge">Tailwind CSS</span>
+                <span className="badge">Render</span>
+                <span className="badge">Hotwire</span>
+                <span className="badge">S3</span>
+              </div>
             </a>
-            <h4 className="mt-4 text-2xl font-bold text-neon-white">
-              アニめぐる
-            </h4>
-            <p className="mt-2 text-neon-green break-words">
-              https://animeguru.jp/
-            </p>
-            <p className="mt-2 text-neon-white">
-              あなたの足で紡ぐ、作品と現実の交差点。アニめぐるは、アニメファン向けの聖地巡礼情報共有プラットフォームです。聖地巡礼の思い出を聖地メモとして共有しよう。
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="badge">Ruby</span>
-              <span className="badge">Ruby on Rails</span>
-              <span className="badge">Tailwind CSS</span>
-              <span className="badge">Render</span>
-              <span className="badge">Hotwire</span>
-              <span className="badge">S3</span>
-            </div>
+            
           </div>
 
           {/* --- fune's Profile --- */}
@@ -67,23 +68,24 @@ export const Works = () => {
                 alt="fune's Profile サイトキャプチャ"
                 className="rounded-lg w-full h-auto"
               />
+              <h4 className="mt-4 text-2xl font-bold text-neon-white">
+                fune&apos;s Profile
+              </h4>
+              <p className="mt-2 text-neon-green break-words">
+                https://fune6900.github.io/myprof/
+              </p>
+              <p className="mt-2 text-neon-white">
+                個人サイトです。自身のプロフィールやスキル、ポートフォリオを紹介しています。今後も更新を続け、成長の軌跡を記録していきます。
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="badge">TypeScript</span>
+                <span className="badge">React</span>
+                <span className="badge">Tailwind CSS</span>
+                <span className="badge">Github Pages</span>
+                <span className="badge">Vite</span>
+              </div>
             </a>
-            <h4 className="mt-4 text-2xl font-bold text-neon-white">
-              fune&apos;s Profile
-            </h4>
-            <p className="mt-2 text-neon-green break-words">
-              https://fune6900.github.io/myprof/
-            </p>
-            <p className="mt-2 text-neon-white">
-              個人サイトです。自身のプロフィールやスキル、ポートフォリオを紹介しています。今後も更新を続け、成長の軌跡を記録していきます。
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="badge">TypeScript</span>
-              <span className="badge">React</span>
-              <span className="badge">Tailwind CSS</span>
-              <span className="badge">Github Pages</span>
-              <span className="badge">Vite</span>
-            </div>
+            
           </div>
         </div>
       </div>
