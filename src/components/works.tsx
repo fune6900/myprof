@@ -51,7 +51,6 @@ export const Works = () => {
                 <span className="badge">S3</span>
               </div>
             </a>
-            
           </div>
 
           {/* --- fune's Profile --- */}
@@ -85,7 +84,6 @@ export const Works = () => {
                 <span className="badge">Vite</span>
               </div>
             </a>
-            
           </div>
         </div>
       </div>
