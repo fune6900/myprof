@@ -14,7 +14,6 @@ function App() {
       <Prof />
       <Skill />
       <Works />
-      <p className="text-center py-8">© Riku Funagayama, All Rights Reserved.</p>
     </div>
   )
 }
