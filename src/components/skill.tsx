@@ -1,4 +1,3 @@
-import { HiCpuChip } from "react-icons/hi2";
 import { DiRuby } from "react-icons/di";
 import { SiTypescript, SiRubyonrails } from "react-icons/si";
 import { FaHtml5, FaCss3Alt, FaReact, FaPhp, FaLaravel, FaDocker } from "react-icons/fa";
