@@ -2,9 +2,28 @@ import { RiUserStarFill } from "react-icons/ri";
 import fune from "../assets/fune.png";
 import { motion } from "framer-motion";
 
+type CareerEntry = {
+  year: string;
+  text: string;
+};
+
+const CAREER: CareerEntry[] = [
+  { year: "2022年3月", text: "宮崎県立佐土原高等学校 卒業" },
+  {
+    year: "2022年4月",
+    text: "株式会社アドヴィックスに入社し、自動車用ブレーキの製造業務に従事しながらVBAなどを用いて業務効率化を推進",
+  },
+  {
+    year: "2024年6月",
+    text: "プログラミングスクールRUNTEQに入学して、Ruby on Railsを中心にWeb開発を学習",
+  },
+  { year: "2025年3月", text: "RUNTEQ 卒業!!" },
+  { year: "2026年1月", text: "株式会社帆風（クレアテック）に入社" },
+];
+
 export const Prof = () => {
   return (
-    <section className="relative py-16 text-center border-neon- border-neon-green mx-auto px-4">
+    <section id="profile" className="relative py-16 text-center border-neon-green mx-auto px-4">
       {/* タイトル */}
       <div className="relative mb-10">
         <h3 className="absolute -top-4 inset-x-4 w-auto text-2xl font-bold flex items-center justify-center z-10">
@@ -56,23 +75,10 @@ export const Prof = () => {
           <h3 className="mb-4 text-3xl text-neon-white font-bold text-left">経歴</h3>
 
           <div className="flex flex-col gap-4">
-            {[
-              { year: "2022年3月", text: "宮崎県立佐土原高等学校 卒業" },
-              {
-                year: "2022年4月",
-                text:
-                  "株式会社アドヴィックスに入社し、自動車用ブレーキの製造業務に従事しながらVBAなどを用いて業務効率化を推進",
-              },
-              {
-                year: "2024年6月",
-                text: "プログラミングスクールRUNTEQに入学して、Ruby on Railsを中心にWeb開発を学習",
-              },
-              { year: "2025年3月", text: "RUNTEQ 卒業!!" },
-              { year: "2026年1月", text: "株式会社帆風（クレアテック）に入社" },
-            ].map((item, index) => (
+            {CAREER.map((item, index) => (
               <motion.div
-                key={index}
-                className="border border-neon border-neon-green rounded-md p-3 text-neon-white text-left hover:bg-[#0a0a0a] transition-colors duration-300"
+                key={item.year}
+                className="border-neon border-neon-green rounded-md p-3 text-neon-white text-left hover:bg-[#0a0a0a] transition-colors duration-300"
                 initial={{ opacity: 0, x: index % 2 === 0 ? -40 : 40 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 transition={{ duration: 4, type: "spring", bounce: 0.3 }}

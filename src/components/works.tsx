@@ -1,7 +1,32 @@
 import { FaRocket } from "react-icons/fa";
-import animeguru from "../assets/animeguru.png";
-import profile from "../assets/fune's_prpfile.png"; 
 import { motion } from "framer-motion";
+import animeguru from "../assets/animeguru.png";
+import profile from "../assets/fune's_prpfile.png";
+
+type Work = {
+  title: string;
+  link: string;
+  img: string;
+  desc: string;
+  badges: string[];
+};
+
+const WORKS: Work[] = [
+  {
+    title: "アニめぐる",
+    link: "https://animeguru.jp/",
+    img: animeguru,
+    desc: "あなたの足で紡ぐ、作品と現実の交差点。アニめぐるは、アニメファン向けの聖地巡礼情報共有プラットフォームです。聖地巡礼の思い出を聖地メモとして共有しよう。",
+    badges: ["Ruby", "Ruby on Rails", "Tailwind CSS", "Render", "Hotwire", "S3"],
+  },
+  {
+    title: "fune's Profile",
+    link: "https://fune6900.github.io/myprof/",
+    img: profile,
+    desc: "個人サイトです。自身のプロフィールやスキル、ポートフォリオを紹介しています。今後も更新を続け、成長の軌跡を記録していきます。",
+    badges: ["TypeScript", "React", "Tailwind CSS", "Github Pages", "Vite"],
+  },
+];
 
 export const Works = () => {
   return (
@@ -30,26 +55,12 @@ export const Works = () => {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.6 }}
+          viewport={{ once: true, amount: 0.3 }}
         >
-          {[
-            {
-              title: "アニめぐる",
-              link: "https://animeguru.jp/",
-              img: animeguru,
-              desc: "あなたの足で紡ぐ、作品と現実の交差点。アニめぐるは、アニメファン向けの聖地巡礼情報共有プラットフォームです。聖地巡礼の思い出を聖地メモとして共有しよう。",
-              badges: ["Ruby", "Ruby on Rails", "Tailwind CSS", "Render", "Hotwire", "S3"],
-            },
-            {
-              title: "fune's Profile",
-              link: "https://fune6900.github.io/myprof/",
-              img: profile,
-              desc: "個人サイトです。自身のプロフィールやスキル、ポートフォリオを紹介しています。今後も更新を続け、成長の軌跡を記録していきます。",
-              badges: ["TypeScript", "React", "Tailwind CSS", "Github Pages", "Vite"],
-            },
-          ].map((item, index) => (
+          {WORKS.map((item, index) => (
             <motion.div
               key={item.title}
-              className="bg-cyber-black hover:bg-cyber-black hover:border-neon w-full max-w-[500px] p-4 border-neon border-neon-green rounded-lg text-left hover:scale-105 transition-all duration-300"
+              className="bg-cyber-black w-full max-w-[500px] p-4 border-neon border-neon-green rounded-lg text-left transition-all duration-300"
               initial={{ opacity: 0, x: 80 }} // ← 各カードも右から
               whileInView={{ opacity: 1, x: 0 }}
               transition={{
@@ -84,7 +95,7 @@ export const Works = () => {
           ))}
         </motion.div>
       </motion.div>
-      <div className="border-neon-b border-neon-green mt-20"></div>
+      <div className="border-neon-b border-neon-green mt-20" />
       <p className="text-center py-8">© Riku Funagayama, All Rights Reserved.</p>
     </section>
   );
