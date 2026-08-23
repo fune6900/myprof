@@ -10,16 +10,16 @@ export const Helo = () => {
         <img
           src={fune}
           alt="Riku Funagayama Icon"
-          className="mx-auto w-24 h-24 md:w-32 md:h-32 rounded-full mb-4 border-4 border-neon border-neon-green"
+          className="mx-auto w-24 h-24 md:w-32 md:h-32 rounded-full mb-4 border-neon border-neon-green"
         />
 
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-neon-white neon-glow-soft">
           Riku Funagayama
         </h1>
 
-        <h2 className="text-xl md:text-3xl mt-3 md:mt-4 text-neon-green">
+        <p className="text-xl md:text-3xl mt-3 md:mt-4 text-neon-green">
           Stand Out Fit In !!
-        </h2>
+        </p>
 
         <div className="mt-4 md:mt-6">
           <SocialLinks />
@@ -31,12 +31,13 @@ export const Helo = () => {
         </p>
 
         {/* 下スクロールアイコン */}
-        <button
+        <a
+          href="#profile"
           className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-neon-green hover:text-neon-white transition duration-300"
           aria-label="Scroll to next section"
         >
           <FaChevronDown className="text-3xl md:text-4xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)]" />
-        </button>
+        </a>
       </motion.div>
     </section>
   );

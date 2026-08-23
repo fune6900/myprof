@@ -1,9 +1,33 @@
 @import "tailwindcss";
 @plugin "neo-metro-city";
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/*
+ * neo-metro-city は text-neon-white を定義していないため、
+ * プラグインと同じ規約（--neon-text-color を上書きする）で補う。
+ * 子要素にも当てるのは、base の `*` ルールが要素ごとに
+ * --neon-text-color をリセットしてしまうため（.text-neon-none と同じ手法）。
+ */
+:root {
+  --neon-white: #ffffff;
+}
+
+.text-neon-white,
+.text-neon-white * {
+  --neon-text-color: var(--neon-white);
+}
+
 .dotgothic16 {
   font-family: "DotGothic16", sans-serif;
   font-weight: 400;
   font-style: normal;
 }
-
