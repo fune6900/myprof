@@ -1,7 +1,7 @@
 import type { IconType } from "react-icons";
 import { DiRuby } from "react-icons/di";
 import { SiTypescript, SiRubyonrails } from "react-icons/si";
-import { FaHtml5, FaCss3Alt, FaReact, FaPhp, FaLaravel, FaDocker } from "react-icons/fa";
+import { FaHtml5, FaCss3Alt, FaReact, FaPhp, FaLaravel, FaDocker, FaCode } from "react-icons/fa";
 import { TbBrandNextjs } from "react-icons/tb";
 import { RiSupabaseFill } from "react-icons/ri";
 import { BiLogoPostgresql } from "react-icons/bi";
@@ -84,10 +84,23 @@ const SkillGroup = ({ title, items, className = "" }: SkillGroupProps) => {
 
 export const Skill = () => {
   return (
-    <section className="py-16 text-center border-neon-green mx-auto px-4">
-      <SkillGroup title="言語" items={LANGUAGES} />
-      <SkillGroup title="フレームワーク・ライブラリ" items={FRAMEWORKS} />
-      <SkillGroup title="その他" items={OTHERS} className="mb-16" />
+    <section id="skills" aria-labelledby="skills-heading" className="relative py-16 text-center border-neon-green mx-auto px-4">
+      {/* タイトル */}
+      <div className="relative mb-10">
+        <h2 id="skills-heading" className="absolute -top-4 inset-x-4 w-auto text-2xl font-bold flex items-center justify-center z-10">
+          <span className="flex items-center justify-center gap-3 tracking-widest text-neon-green uppercase italic w-fit font-bold px-5 py-1 border-neon rounded-full bg-cyber-black neon-glow-soft">
+            Skills
+            <FaCode className="text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)]" />
+          </span>
+        </h2>
+        <div className="border-neon-b border-neon-green mt-6" />
+      </div>
+
+      <div className="mt-25">
+        <SkillGroup title="言語" items={LANGUAGES} />
+        <SkillGroup title="フレームワーク・ライブラリ" items={FRAMEWORKS} />
+        <SkillGroup title="その他" items={OTHERS} className="mb-16" />
+      </div>
     </section>
   );
 };

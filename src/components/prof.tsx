@@ -23,15 +23,15 @@ const CAREER: CareerEntry[] = [
 
 export const Prof = () => {
   return (
-    <section id="profile" className="relative py-16 text-center border-neon-green mx-auto px-4">
+    <section id="profile" aria-labelledby="profile-heading" className="relative py-16 text-center border-neon-green mx-auto px-4">
       {/* タイトル */}
       <div className="relative mb-10">
-        <h3 className="absolute -top-4 inset-x-4 w-auto text-2xl font-bold flex items-center justify-center z-10">
+        <h2 id="profile-heading" className="absolute -top-4 inset-x-4 w-auto text-2xl font-bold flex items-center justify-center z-10">
           <span className="flex items-center justify-center gap-3 tracking-widest text-neon-green uppercase italic w-fit font-bold px-5 py-1 border-neon rounded-full bg-cyber-black neon-glow-soft">
             Profile
             <RiUserStarFill className="text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)]" />
           </span>
-        </h3>
+        </h2>
         <div className="border-neon-b border-neon-green mt-6" />
       </div>
 
@@ -52,7 +52,7 @@ export const Prof = () => {
 
               {/* 右：ステータス・趣味 */}
               <div className="md:w-2/3 w-full text-left mt-6 md:mt-0">
-                <h4 className="text-2xl font-bold text-neon-white">ステータス</h4>
+                <h3 className="text-2xl font-bold text-neon-white">ステータス</h3>
                 <p className="mt-2 text-neon-white leading-relaxed">
                   2003年生まれ、宮崎県出身。<br />
                   現在は都内でエンジニアとして活動中。<br />
@@ -60,7 +60,7 @@ export const Prof = () => {
                   📧 riku.riku1019@icloud.com
                 </p>
 
-                <h4 className="mt-8 text-2xl font-bold text-neon-white">趣味</h4>
+                <h3 className="mt-8 text-2xl font-bold text-neon-white">趣味</h3>
                 <p className="mt-2 text-neon-white leading-relaxed">
                   古着屋巡り、レコード集め、ガジェット、インテリア、<br />
                   ゲーム、アニメ、プログラミング、etc...

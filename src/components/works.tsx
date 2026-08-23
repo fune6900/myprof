@@ -30,15 +30,15 @@ const WORKS: Work[] = [
 
 export const Works = () => {
   return (
-    <section className="pt-16 text-center border-neon-green mx-auto px-4">
+    <section id="works" aria-labelledby="works-heading" className="pt-16 text-center border-neon-green mx-auto px-4">
       {/* タイトル */}
       <div className="relative mb-10">
-        <h3 className="absolute -top-4 left-0 right-0 w-full text-2xl font-bold flex items-center justify-center z-10">
+        <h2 id="works-heading" className="absolute -top-4 left-0 right-0 w-full text-2xl font-bold flex items-center justify-center z-10">
           <span className="flex items-center justify-center gap-3 tracking-widest text-neon-green uppercase italic w-fit font-bold px-5 py-1 border-neon rounded-full bg-cyber-black neon-glow-soft">
             Works
             <FaRocket className="text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)]" />
           </span>
-        </h3>
+        </h2>
         <div className="border-neon-b border-neon-green mt-6" />
       </div>
 
@@ -79,7 +79,7 @@ export const Works = () => {
                 rel="noopener noreferrer"
               >
                 <img src={item.img} alt={`${item.title} トップページ`} className="rounded-lg w-full h-auto" />
-                <h4 className="mt-4 text-2xl font-bold text-neon-white">{item.title}</h4>
+                <h3 className="mt-4 text-2xl font-bold text-neon-white">{item.title}</h3>
                 <p className="mt-2 text-neon-green break-words">{item.link}</p>
                 <p className="mt-2 text-neon-white">{item.desc}</p>
 

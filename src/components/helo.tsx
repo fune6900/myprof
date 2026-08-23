@@ -17,9 +17,9 @@ export const Helo = () => {
           Riku Funagayama
         </h1>
 
-        <h2 className="text-xl md:text-3xl mt-3 md:mt-4 text-neon-green">
+        <p className="text-xl md:text-3xl mt-3 md:mt-4 text-neon-green">
           Stand Out Fit In !!
-        </h2>
+        </p>
 
         <div className="mt-4 md:mt-6">
           <SocialLinks />
