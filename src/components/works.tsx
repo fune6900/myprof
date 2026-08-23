@@ -2,6 +2,9 @@ import { FaRocket } from "react-icons/fa";
 import { motion } from "framer-motion";
 import animeguru from "../assets/animeguru.png";
 import profile from "../assets/fune's_prpfile.png";
+import aniflix from "../assets/aniflix.png";
+import dig from "../assets/dig.png";
+import funeGallery from "../assets/fune-gallery.png";
 
 type Work = {
   title: string;
@@ -25,6 +28,44 @@ const WORKS: Work[] = [
     img: profile,
     desc: "個人サイトです。自身のプロフィールやスキル、ポートフォリオを紹介しています。今後も更新を続け、成長の軌跡を記録していきます。",
     badges: ["TypeScript", "React", "Tailwind CSS", "Github Pages", "Vite"],
+  },
+  {
+    title: "ANIFLIX",
+    link: "https://aniflex-zeta.vercel.app/",
+    img: aniflix,
+    desc: "NetflixのUI/UXを模倣したアニメ・声優発見プラットフォーム。TMDb API を使って、今期人気・トレンド・新着作品や声優情報を日本語で簡単に探せます。",
+    badges: [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "TMDb API",
+      "Docker",
+      "Docker Compose",
+    ],
+  },
+  {
+    title: "DIG",
+    link: "https://d-i-g.vercel.app/",
+    img: dig,
+    desc: "AI 分析でスタイルを記録・振り返るコーデ日記アプリ。撮って、読んで、探す。毎日の一着を、未来の自分のために残す。",
+    badges: [
+      "Next.js",
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Prisma",
+      "Supabase",
+      "Gemini",
+      "Vitest",
+    ],
+  },
+  {
+    title: "Fune6900’s Gallery",
+    link: "https://fune6900-gallery.vercel.app/",
+    img: funeGallery,
+    desc: "Fune6900のイラスト作品を保管・公開するギャラリーサイト。旧WordPressテーマを移植し、Next.jsとSupabase、Cloudflare R2を使って再構築した作品アーカイブです。",
+    badges: ["Next.js", "TypeScript", "Supabase", "Cloudflare R2", "Vercel", "Docker"],
   },
 ];
 
