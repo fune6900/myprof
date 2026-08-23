@@ -1,0 +1,47 @@
+# Lint / 型チェック / ビルドの検証のみを行う（デプロイは deploy.yml が担当）
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同じブランチ / PR で新しい push があれば、実行中の古いジョブはキャンセルする
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint / Typecheck / Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 以降の 3 ステップは !cancelled() を付けて、途中で失敗しても
+      # 残りを実行する（1 回の実行で全ての問題が見えるようにするため）
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: npm run lint -- --max-warnings 0
+
+      - name: Typecheck
+        if: ${{ !cancelled() }}
+        run: npm run typecheck
+
+      - name: Build
+        if: ${{ !cancelled() }}
+        run: npm run build
