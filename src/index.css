@@ -1,14 +1,16 @@
 @import "tailwindcss";
 @plugin "neo-metro-city";
 
-html {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+/*
+ * 斜め展開ナビゲーションがスクロールを完全にジャックするため、
+ * ドキュメント側のスクロールは殺しておく。
+ * overscroll-behavior はモバイルの引っ張って更新を止めるために要る。
+ */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /*

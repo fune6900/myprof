@@ -1,5 +1,5 @@
 import { FaRocket } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { SectionHeading } from "./SectionHeading";
 import animeguru from "../assets/animeguru.png";
 import profile from "../assets/fune's_prpfile.png";
 import aniflix from "../assets/aniflix.png";
@@ -19,112 +19,74 @@ const WORKS: Work[] = [
     title: "アニめぐる",
     link: "https://animeguru.jp/",
     img: animeguru,
-    desc: "あなたの足で紡ぐ、作品と現実の交差点。アニめぐるは、アニメファン向けの聖地巡礼情報共有プラットフォームです。聖地巡礼の思い出を聖地メモとして共有しよう。",
-    badges: ["Ruby", "Ruby on Rails", "Tailwind CSS", "Render", "Hotwire", "S3"],
-  },
-  {
-    title: "fune's Profile",
-    link: "https://fune6900.github.io/myprof/",
-    img: profile,
-    desc: "個人サイトです。自身のプロフィールやスキル、ポートフォリオを紹介しています。今後も更新を続け、成長の軌跡を記録していきます。",
-    badges: ["TypeScript", "React", "Tailwind CSS", "Github Pages", "Vite"],
+    desc: "あなたの足で紡ぐ、作品と現実の交差点。アニメファン向けの聖地巡礼情報共有プラットフォームです。",
+    badges: ["Ruby on Rails", "Tailwind CSS", "Hotwire", "S3"],
   },
   {
     title: "ANIFLIX",
     link: "https://aniflex-zeta.vercel.app/",
     img: aniflix,
-    desc: "NetflixのUI/UXを模倣したアニメ・声優発見プラットフォーム。TMDb API を使って、今期人気・トレンド・新着作品や声優情報を日本語で簡単に探せます。",
-    badges: [
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Tailwind CSS",
-      "TMDb API",
-      "Docker",
-      "Docker Compose",
-    ],
+    desc: "NetflixのUI/UXを模倣したアニメ・声優発見プラットフォーム。TMDb API で今期人気・トレンドを日本語で探せます。",
+    badges: ["Next.js", "TypeScript", "TMDb API", "Docker"],
   },
   {
     title: "DIG",
     link: "https://d-i-g.vercel.app/",
     img: dig,
-    desc: "AI 分析でスタイルを記録・振り返るコーデ日記アプリ。撮って、読んで、探す。毎日の一着を、未来の自分のために残す。",
-    badges: [
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Tailwind CSS",
-      "Prisma",
-      "Supabase",
-      "Gemini",
-      "Vitest",
-    ],
+    desc: "AI 分析でスタイルを記録・振り返るコーデ日記アプリ。毎日の一着を、未来の自分のために残す。",
+    badges: ["Next.js", "Prisma", "Supabase", "Gemini"],
   },
   {
     title: "Fune6900’s Gallery",
     link: "https://fune6900-gallery.vercel.app/",
     img: funeGallery,
-    desc: "Fune6900のイラスト作品を保管・公開するギャラリーサイト。旧WordPressテーマを移植し、Next.jsとSupabase、Cloudflare R2を使って再構築した作品アーカイブです。",
-    badges: ["Next.js", "TypeScript", "Supabase", "Cloudflare R2", "Vercel", "Docker"],
+    desc: "イラスト作品を保管・公開するギャラリーサイト。旧WordPressテーマを Next.js で再構築した作品アーカイブ。",
+    badges: ["Next.js", "Supabase", "Cloudflare R2", "Vercel"],
+  },
+  {
+    title: "fune's Profile",
+    link: "https://fune6900.github.io/myprof/",
+    img: profile,
+    desc: "この個人サイト。プロフィールやスキル、ポートフォリオを紹介しています。",
+    badges: ["TypeScript", "React", "anime.js", "Vite"],
   },
 ];
 
 export const Works = () => {
   return (
-    <section id="works" aria-labelledby="works-heading" className="pt-16 text-center border-neon-green mx-auto px-4">
-      {/* タイトル */}
-      <div className="relative mb-10">
-        <h2 id="works-heading" className="absolute -top-4 left-0 right-0 w-full text-2xl font-bold flex items-center justify-center z-10">
-          <span className="flex items-center justify-center gap-3 tracking-widest text-neon-green uppercase italic w-fit font-bold px-5 py-1 border-neon rounded-full bg-cyber-black neon-glow-soft">
-            Works
-            <FaRocket className="text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)]" />
-          </span>
-        </h2>
-        <div className="border-neon-b border-neon-green mt-6" />
-      </div>
+    <section
+      id="works"
+      aria-labelledby="works-heading"
+      className="flex h-full w-full flex-col px-3 py-6 md:px-10 md:py-10"
+    >
+      <SectionHeading id="works-heading" title="Works" icon={FaRocket} />
 
-      {/* カードたち */}
-      <motion.div
-        className="flex justify-center"
-        initial={{ opacity: 0, x: 100 }} // ← 右からスライドイン
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        viewport={{ once: true, amount: 0.3 }} // 一度だけ再生
-      >
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 justify-items-center mt-25 w-full"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          viewport={{ once: true, amount: 0.3 }}
-        >
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <ul className="grid w-full max-w-6xl grid-cols-2 gap-2.5 md:gap-4 lg:grid-cols-3">
           {WORKS.map((item, index) => (
-            <motion.div
+            <li
               key={item.title}
-              className="bg-cyber-black w-full max-w-[500px] p-4 border-neon border-neon-green rounded-lg text-left transition-all duration-300"
-              initial={{ opacity: 0, x: 80 }} // ← 各カードも右から
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: index * 0.2, // 順にスライド表示
-                ease: "easeOut",
-              }}
-              whileHover={{ scale: 1.05, y: -4 }} // ホバーで浮かぶ
-              viewport={{ once: true, amount: 0.3 }}
+              data-anim="item"
+              // 列ごとに少しずつ下げて斜めの流れをつくる
+              className="lg:[margin-top:var(--step)]"
+              style={{ "--step": `${(index % 3) * 1.25}rem` } as React.CSSProperties}
             >
               <a
                 href={item.link}
-                aria-label={item.title}
-                className="block"
+                className="group block h-full rounded-lg border-neon border-neon-green bg-cyber-black p-2 text-left transition-transform duration-300 hover:scale-[1.03] md:p-3"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <img src={item.img} alt={`${item.title} トップページ`} className="rounded-lg w-full h-auto" />
-                <h3 className="mt-4 text-2xl font-bold text-neon-white">{item.title}</h3>
-                <p className="mt-2 text-neon-green break-words">{item.link}</p>
-                <p className="mt-2 text-neon-white">{item.desc}</p>
+                <img
+                  src={item.img}
+                  alt={`${item.title} トップページ`}
+                  loading="lazy"
+                  className="aspect-video w-full rounded object-cover object-top"
+                />
+                <h3 className="mt-1.5 text-sm font-bold text-neon-white md:mt-2 md:text-lg">{item.title}</h3>
+                <p className="mt-1 hidden line-clamp-2 text-xs text-neon-white md:block">{item.desc}</p>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-1.5 flex flex-wrap gap-1 md:mt-2">
                   {item.badges.map((badge) => (
                     <span key={badge} className="badge">
                       {badge}
@@ -132,12 +94,14 @@ export const Works = () => {
                   ))}
                 </div>
               </a>
-            </motion.div>
+            </li>
           ))}
-        </motion.div>
-      </motion.div>
-      <div className="border-neon-b border-neon-green mt-20" />
-      <p className="text-center py-8">© Riku Funagayama, All Rights Reserved.</p>
+        </ul>
+      </div>
+
+      <p className="shrink-0 pt-3 text-center text-[0.65rem] text-neon-white md:pt-4 md:text-xs">
+        © Riku Funagayama, All Rights Reserved.
+      </p>
     </section>
   );
 };
