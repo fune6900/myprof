@@ -1,14 +1,16 @@
 @import "tailwindcss";
 @plugin "neo-metro-city";
 
-html {
-  scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+/*
+ * 斜め展開ナビゲーションがスクロールを完全にジャックするため、
+ * ドキュメント側のスクロールは殺しておく。
+ * overscroll-behavior はモバイルの引っ張って更新を止めるために要る。
+ */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 /*
@@ -24,6 +26,58 @@ html {
 .text-neon-white,
 .text-neon-white * {
   --neon-text-color: var(--neon-white);
+}
+
+/*
+ * 背景グリッド。NeonGrid がステージより遅い速度で動かして視差をつくる。
+ * 中央を明るく、端に向かって消える mask を掛けてコンテンツの邪魔をしないようにする。
+ */
+.neon-grid-viewport {
+  /*
+   * mask は画面と同じ大きさのこちらに掛ける。
+   * 内側の .neon-grid は画面より大きく動くので、そちらに掛けると
+   * mask の中心が画面外へ出てしまい何も見えなくなる。
+   */
+  mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 30%, transparent 78%);
+}
+
+.neon-grid {
+  --grid-size: 64px;
+  --grid-line: color-mix(in srgb, var(--neon-green) 22%, transparent);
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+}
+
+/*
+ * カードのホバー時にカーソルを追う光。
+ * `*` リセットは擬似要素には当たらないので text-shadow の影響を受けない。
+ */
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    14rem circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--neon-green) 20%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.spotlight-card:hover::after,
+.spotlight-card:focus-visible::after {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-card::after {
+    display: none;
+  }
 }
 
 .dotgothic16 {

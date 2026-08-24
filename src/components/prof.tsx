@@ -1,6 +1,6 @@
 import { RiUserStarFill } from "react-icons/ri";
 import fune from "../assets/fune.png";
-import { motion } from "framer-motion";
+import { SectionHeading } from "./SectionHeading";
 
 type CareerEntry = {
   year: string;
@@ -23,70 +23,70 @@ const CAREER: CareerEntry[] = [
 
 export const Prof = () => {
   return (
-    <section id="profile" aria-labelledby="profile-heading" className="relative py-16 text-center border-neon-green mx-auto px-4">
-      {/* タイトル */}
-      <div className="relative mb-10">
-        <h2 id="profile-heading" className="absolute -top-4 inset-x-4 w-auto text-2xl font-bold flex items-center justify-center z-10">
-          <span className="flex items-center justify-center gap-3 tracking-widest text-neon-green uppercase italic w-fit font-bold px-5 py-1 border-neon rounded-full bg-cyber-black neon-glow-soft">
-            Profile
-            <RiUserStarFill className="text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)]" />
-          </span>
-        </h2>
-        <div className="border-neon-b border-neon-green mt-6" />
-      </div>
+    <section
+      id="profile"
+      aria-labelledby="profile-heading"
+      className="flex h-full w-full flex-col px-4 py-10 md:px-10"
+    >
+      <SectionHeading id="profile-heading" title="Profile" icon={RiUserStarFill} />
 
-      {/* コンテンツ全体 */}
-      <div className="flex flex-col items-center justify-center gap-16 mt-25">
-        <motion.div initial={{ x: 48, y: 48, scale: 0 }} whileInView={{ x: 0, y: 0, scale: 1 }} transition={{ duration: 1, delay: 0.6, type: 'spring', bounce: 0.8 }} viewport={{ once: true, amount: 0.3 }}>
-          {/* --- 上段（画像＋ステータス・趣味） --- */}
-          <div className="bg-cyber-black w-full max-w-[800px] p-6 border-neon border-neon-green rounded-lg transition-all duration-300">
-            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
-              {/* 左：画像 */}
-              <div className="flex justify-center md:w-1/3 w-full">
-                <img
-                  src={fune}
-                  alt="プロフィール画像"
-                  className="rounded-full w-32 h-32 md:w-40 md:h-40 object-cover border-2 border-neon-green"
-                />
-              </div>
-
-              {/* 右：ステータス・趣味 */}
-              <div className="md:w-2/3 w-full text-left mt-6 md:mt-0">
-                <h3 className="text-2xl font-bold text-neon-white">ステータス</h3>
-                <p className="mt-2 text-neon-white leading-relaxed">
-                  2003年生まれ、宮崎県出身。<br />
-                  現在は都内でエンジニアとして活動中。<br />
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10">
+          {/* 左：プロフィール */}
+          <div
+            data-anim="item"
+            className="rounded-lg border-neon border-neon-green bg-cyber-black p-5"
+          >
+            <div className="flex items-center gap-5">
+              <img
+                src={fune}
+                alt="プロフィール画像"
+                className="h-24 w-24 shrink-0 rounded-full border-2 border-neon-green object-cover md:h-28 md:w-28"
+              />
+              <div className="text-left">
+                <h3 className="text-xl font-bold text-neon-white md:text-2xl">
+                  ステータス
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-neon-white md:text-base">
+                  2003年生まれ、宮崎県出身。
                   <br />
-                  📧 riku.riku1019@icloud.com
-                </p>
-
-                <h3 className="mt-8 text-2xl font-bold text-neon-white">趣味</h3>
-                <p className="mt-2 text-neon-white leading-relaxed">
-                  古着屋巡り、レコード集め、ガジェット、インテリア、<br />
-                  ゲーム、アニメ、プログラミング、etc...
+                  現在は都内でエンジニアとして活動中。
                 </p>
               </div>
             </div>
+
+            <p className="mt-4 break-all text-sm text-neon-white md:text-base">
+              📧 riku.riku1019@icloud.com
+            </p>
+
+            <h3 className="mt-5 text-xl font-bold text-neon-white md:text-2xl">趣味</h3>
+            <p className="mt-1 text-sm leading-relaxed text-neon-white md:text-base">
+              古着屋巡り、レコード集め、ガジェット、インテリア、
+              <br />
+              ゲーム、アニメ、プログラミング、etc...
+            </p>
           </div>
-        </motion.div>
 
-        {/* --- 下段（経歴） --- */}
-        <div className="bg-cyber-black w-full max-w-[800px] p-6 rounded-lg transition-all duration-300">
-          <h3 className="mb-4 text-3xl text-neon-white font-bold text-left">経歴</h3>
+          {/* 右：経歴。1 件ずつ右へずらして斜めの流れをつくる */}
+          <div className="text-left">
+            <h3 className="mb-3 text-xl font-bold text-neon-white md:text-2xl">経歴</h3>
 
-          <div className="flex flex-col gap-4">
-            {CAREER.map((item, index) => (
-              <motion.div
-                key={item.year}
-                className="border-neon border-neon-green rounded-md p-3 text-neon-white text-left hover:bg-[#0a0a0a] transition-colors duration-300"
-                initial={{ opacity: 0, x: index % 2 === 0 ? -40 : 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 4, type: "spring", bounce: 0.3 }}
-                viewport={{ once: true, amount: 0.3 }}
-              >
-                <span className="font-bold">{item.year}：</span> {item.text}
-              </motion.div>
-            ))}
+            <ol className="flex flex-col gap-2">
+              {CAREER.map((item, index) => (
+                <li
+                  key={item.year}
+                  className="md:[transform:translateX(var(--step))]"
+                  style={{ "--step": `${index * 1.5}rem` } as React.CSSProperties}
+                >
+                  <div
+                    data-anim="item"
+                    className="rounded-md border-neon border-neon-green p-2.5 text-sm text-neon-white transition-colors duration-300 hover:bg-[#0a0a0a] md:p-3 md:text-base"
+                  >
+                    <span className="font-bold">{item.year}：</span> {item.text}
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </div>
