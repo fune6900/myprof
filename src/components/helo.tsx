@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+import { animate, scrambleText } from "animejs";
 import { SocialLinks } from "../ui-component/SocialLinks/SocialLinks";
 import fune from "../assets/fune.png";
 import { FaChevronDown } from "react-icons/fa";
@@ -8,10 +10,30 @@ type HeloProps = {
 };
 
 export const Helo = ({ onAdvance }: HeloProps) => {
+  const name = useRef<HTMLHeadingElement>(null);
+
+  /* 名前をスクランブルから組み上げる。動きを減らす設定なら何もしない */
+  useEffect(() => {
+    const el = name.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const animation = animate(el, {
+      textContent: scrambleText({ chars: "A-Za-z0-9!%#_", revealRate: 14 }),
+      duration: 2600,
+      delay: 400,
+      ease: "linear",
+    });
+
+    return () => {
+      animation.revert();
+    };
+  }, []);
+
   return (
     <section
       id="hero"
-      className="relative flex h-full w-full flex-col items-center justify-center bg-cyber-black px-4 text-center"
+      className="relative flex h-full w-full flex-col items-center justify-center px-4 text-center"
     >
       <div>
         <img
@@ -22,6 +44,7 @@ export const Helo = ({ onAdvance }: HeloProps) => {
         />
 
         <h1
+          ref={name}
           data-anim="title"
           className="neon-glow-soft text-3xl font-bold text-neon-white md:text-4xl lg:text-5xl"
         >

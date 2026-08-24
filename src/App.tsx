@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { DiagonalStage, type StageSection } from './components/DiagonalStage';
+import { NeonGrid } from './components/NeonGrid';
 import { SectionIndicator } from './ui-component/SectionIndicator';
 import ScrollComponent from './ui-component/ScrollComponent/ScrollComponent';
 import { useDiagonalNavigator } from './hooks/useDiagonalNavigator';
@@ -27,6 +28,7 @@ function App() {
 
   return (
     <div className="dotgothic16">
+      <NeonGrid navigator={navigator} />
       <SectionIndicator sections={sections} navigator={navigator} />
       <ScrollComponent onBackToTop={() => goTo(0)} disabled={activeIndex === 0} />
       <DiagonalStage sections={sections} navigator={navigator} />

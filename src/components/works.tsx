@@ -73,7 +73,19 @@ export const Works = () => {
             >
               <a
                 href={item.link}
-                className="group block h-full rounded-lg border-neon border-neon-green bg-cyber-black p-2 text-left transition-transform duration-300 hover:scale-[1.03] md:p-3"
+                className="spotlight-card relative block h-full overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black p-2 text-left transition-transform duration-300 hover:scale-[1.03] md:p-3"
+                onMouseMove={(event) => {
+                  // カーソル位置を CSS 変数に流して ::after の光を動かす
+                  const rect = event.currentTarget.getBoundingClientRect();
+                  event.currentTarget.style.setProperty(
+                    "--mx",
+                    `${event.clientX - rect.left}px`,
+                  );
+                  event.currentTarget.style.setProperty(
+                    "--my",
+                    `${event.clientY - rect.top}px`,
+                  );
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
               >
