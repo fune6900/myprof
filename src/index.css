@@ -80,6 +80,17 @@ body {
   }
 }
 
+/*
+ * 狭い画面ではバッジを 3 つまでにする。
+ * 高さで切ると行の途中でバッジが欠けて壊れて見えるため、
+ * 個数で絞って必ず行の境界で終わるようにしている。
+ */
+@media (max-width: 767px) {
+  .badge-row > :nth-child(n + 4) {
+    display: none;
+  }
+}
+
 .dotgothic16 {
   font-family: "DotGothic16", sans-serif;
   font-weight: 400;

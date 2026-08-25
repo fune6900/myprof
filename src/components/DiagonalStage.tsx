@@ -22,9 +22,29 @@ const clamp = (value: number, min: number, max: number) =>
 const TITLE_FROM = { opacity: 0, y: -32, scale: 0.92 };
 const TITLE_TO = { opacity: [0, 1], y: [-32, 0], scale: [0.92, 1] };
 
-/** 各アイテムの開始状態と着地状態。右下から斜めに入ってくる */
-const ITEM_FROM = { opacity: 0, x: 56, y: 56, scale: 0.94 };
-const ITEM_TO = { opacity: [0, 1], x: [56, 0], y: [56, 0], scale: [0.94, 1] };
+/**
+ * アイテムがどの方向から入ってくるか。
+ * セクションの data-anim-from で切り替える（既定は右下）。
+ */
+const ITEM_DIRECTIONS = {
+  'bottom-right': { x: 56, y: 56 },
+  'top-right': { x: 72, y: -72 },
+  'bottom-left': { x: -56, y: 56 },
+  'top-left': { x: -72, y: -72 },
+} as const;
+
+type ItemDirection = keyof typeof ITEM_DIRECTIONS;
+
+const isItemDirection = (value: string | undefined): value is ItemDirection =>
+  value !== undefined && value in ITEM_DIRECTIONS;
+
+const itemStates = (direction: ItemDirection) => {
+  const { x, y } = ITEM_DIRECTIONS[direction];
+  return {
+    from: { opacity: 0, x, y, scale: 0.94 },
+    to: { opacity: [0, 1], x: [x, 0], y: [y, 0], scale: [0.94, 1] },
+  };
+};
 
 /**
  * セクションを仮想キャンバス上の斜め線に並べ、ステージ全体を逆向きに動かす。
@@ -71,8 +91,14 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
          * seek しただけでは素の CSS（opacity: 1）のまま残ってしまう。
          * スタガーの後半が最初から見えてしまうので、開始前の状態を先に置く。
          */
+        const rawDirection = sectionEl.querySelector<HTMLElement>('[data-anim-from]')
+          ?.dataset.animFrom;
+        const { from: itemFrom, to: itemTo } = itemStates(
+          isItemDirection(rawDirection) ? rawDirection : 'bottom-right',
+        );
+
         utils.set(titles, TITLE_FROM);
-        utils.set(items, ITEM_FROM);
+        utils.set(items, itemFrom);
 
         const tl = createTimeline({
           autoplay: false,
@@ -84,7 +110,7 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
         }
 
         if (items.length) {
-          tl.add(items, ITEM_TO, stagger(70, { start: 150 }));
+          tl.add(items, itemTo, stagger(70, { start: 150 }));
         }
 
         return tl;

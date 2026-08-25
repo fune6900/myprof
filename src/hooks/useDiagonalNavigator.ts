@@ -47,15 +47,22 @@ export const useDiagonalNavigator = (
 ): DiagonalNavigator => {
   const count = ids.length;
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  /** 起動時の URL が指すセクション。effect より前に確定させる */
+  const initialIndex = useRef<number | null>(null);
+  if (initialIndex.current === null) {
+    initialIndex.current = indexFromHash(ids) ?? 0;
+  }
+  const start = initialIndex.current;
+
+  const [activeIndex, setActiveIndex] = useState(start);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   /** 表示されている progress */
-  const progressRef = useRef(0);
+  const progressRef = useRef(start);
   /** progress が向かう先 */
-  const targetRef = useRef(0);
+  const targetRef = useRef(start);
   /** 直近で落ち着いたセクション。ここから ±1 までしか動かさない */
-  const anchorRef = useRef(0);
+  const anchorRef = useRef(start);
   const listenersRef = useRef(new Set<(progress: number) => void>());
   const frameRef = useRef<number | null>(null);
   const snapTimerRef = useRef<number | null>(null);
@@ -162,17 +169,8 @@ export const useDiagonalNavigator = (
     return () => query.removeEventListener('change', sync);
   }, []);
 
-  /* 起動時の hash と、戻る/進むによる hash 変更に追従する */
+  /* 戻る/進むやアンカーによる hash 変更に追従する */
   useEffect(() => {
-    const initial = indexFromHash(ids);
-    if (initial !== null) {
-      progressRef.current = initial;
-      targetRef.current = initial;
-      anchorRef.current = initial;
-      setActiveIndex(initial);
-      publish();
-    }
-
     const onHashChange = () => {
       const index = indexFromHash(ids);
       if (index !== null) goTo(index);
@@ -180,7 +178,7 @@ export const useDiagonalNavigator = (
 
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
-  }, [ids, goTo, publish]);
+  }, [ids, goTo]);
 
   /* activeIndex を URL に反映する。履歴は汚さない */
   useEffect(() => {
