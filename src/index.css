@@ -80,14 +80,25 @@ body {
   }
 }
 
+/* 縦スクロールする一覧。ネオンの見た目を崩さないようバーは隠す */
+[data-scrollable]::-webkit-scrollbar {
+  display: none;
+}
+
 /*
- * 狭い画面ではバッジを 3 つまでにする。
- * 高さで切ると行の途中でバッジが欠けて壊れて見えるため、
- * 個数で絞って必ず行の境界で終わるようにしている。
+ * スクロールする一覧の上下を薄く消す。
+ * 見出しの帯へカードがそのままぶつかると窮屈に見えるため。
+ * スクロールしない画面幅（md 以上）では掛けない。
  */
 @media (max-width: 767px) {
-  .badge-row > :nth-child(n + 4) {
-    display: none;
+  [data-scrollable] {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      #000 1.25rem,
+      #000 calc(100% - 1.25rem),
+      transparent 100%
+    );
   }
 }
 

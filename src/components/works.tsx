@@ -125,12 +125,21 @@ export const Works = () => {
         行数を固定したグリッド。1 行の高さが画面から決まるので、
         画面が低くても見出しへせり上がって重なることがない。
       */}
-      <ul className="relative mt-4 grid min-h-0 flex-1 grid-cols-2 grid-rows-3 gap-2.5 md:gap-4 lg:grid-cols-3 lg:grid-rows-2">
+      {/*
+        狭い画面は 1 列にして縦スクロール。
+        data-scrollable が付いた領域はナビゲーションがスワイプを奪わず、
+        端まで来たところでセクション移動へ引き継がれる。
+        md 以上は 1 画面に収まる固定グリッドのまま。
+      */}
+      <ul
+        data-scrollable
+        className="relative mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain [scrollbar-width:none] md:grid md:grid-cols-2 md:grid-rows-3 md:gap-4 md:overflow-visible lg:grid-cols-3 lg:grid-rows-2"
+      >
         {WORKS.map((item) => (
           <li
             key={item.title}
             data-anim="item"
-            className="relative min-h-0"
+            className="relative shrink-0 md:min-h-0 md:shrink"
             onMouseEnter={() => setActive(item)}
             onMouseLeave={() => setActive((current) => (current === item ? null : current))}
           >
@@ -138,7 +147,7 @@ export const Works = () => {
               href={item.link}
               onFocus={() => setActive(item)}
               onBlur={() => setActive((current) => (current === item ? null : current))}
-              className="spotlight-card relative flex h-full min-h-0 flex-col overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black/80 p-2 text-left transition-transform duration-300 hover:scale-[1.03] md:p-3"
+              className="spotlight-card relative flex flex-col overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black/80 p-2 text-left transition-transform duration-300 hover:scale-[1.03] md:h-full md:min-h-0 md:p-3"
               target="_blank"
               rel="noopener noreferrer"
               onMouseMove={(event) => {
@@ -153,7 +162,7 @@ export const Works = () => {
                 src={item.img}
                 alt={`${item.title} トップページ`}
                 loading="lazy"
-                className="w-full flex-1 rounded object-cover object-top [min-height:3.5rem]"
+                className="aspect-video w-full rounded object-cover object-top md:aspect-auto md:flex-1 md:[min-height:3.5rem]"
               />
 
               <h3 className="mt-1.5 flex shrink-0 flex-wrap items-baseline gap-x-2 text-sm font-bold text-neon-white md:text-lg">
@@ -165,8 +174,14 @@ export const Works = () => {
                 )}
               </h3>
 
-              {/* 低い画面では画像とバッジを優先して説明文を出さない */}
-              <p className="mt-1 hidden shrink-0 text-[0.65rem] leading-snug text-neon-white [@media(min-height:700px)]:line-clamp-2 md:text-xs">
+              {/*
+                1 列でスクロールできる狭い画面では全文を出す。
+                md 以上は 1 画面に収める都合があるので、低い画面では省く。
+              */}
+              <p className="mt-1 shrink-0 text-[0.65rem] leading-snug text-neon-white md:hidden">
+                {item.desc}
+              </p>
+              <p className="mt-1 hidden shrink-0 text-xs leading-snug text-neon-white md:[@media(min-height:700px)]:line-clamp-2">
                 {item.desc}
               </p>
 

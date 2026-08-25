@@ -34,6 +34,38 @@ export type DiagonalNavigator = {
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+/**
+ * まだその方向へ動かせるスクロール領域を祖先から探す。
+ * 見つかった場合はハイジャックせず、そちらに委ねる。
+ *
+ * @param deltaY 正なら下方向（コンテンツを先へ送る）
+ */
+const scrollableAncestor = (
+  node: EventTarget | null,
+  deltaY: number,
+): HTMLElement | null => {
+  let el = node instanceof HTMLElement ? node : null;
+
+  while (el) {
+    if (el.dataset.scrollable !== undefined) {
+      // overflow が visible のままだと scrollTop は常に 0 で動かせない。
+      // 実際にスクロールできる指定かどうかを見てから判断する
+      const overflowY = getComputedStyle(el).overflowY;
+      const canScroll = overflowY === 'auto' || overflowY === 'scroll';
+      const max = el.scrollHeight - el.clientHeight;
+
+      if (canScroll && max > 1) {
+        const top = el.scrollTop;
+        if (deltaY > 0 && top < max - 1) return el;
+        if (deltaY < 0 && top > 1) return el;
+      }
+    }
+    el = el.parentElement;
+  }
+
+  return null;
+};
+
 /** location.hash からセクション index を引く。該当しなければ null */
 const indexFromHash = (ids: readonly string[]): number | null => {
   const id = window.location.hash.replace(/^#/, '');
@@ -190,12 +222,16 @@ export const useDiagonalNavigator = (
   /* 入力のジャック */
   useEffect(() => {
     const onWheel = (event: WheelEvent) => {
+      // 内側にまだ動かせるスクロール領域があるならそちらを優先する
+      if (scrollableAncestor(event.target, event.deltaY)) return;
+
       event.preventDefault();
       applyDelta(event.deltaY / WHEEL_UNIT);
     };
 
     let touchStartX = 0;
     let touchStartY = 0;
+    let touchLastY = 0;
     let touchStartTarget = 0;
 
     const onTouchStart = (event: TouchEvent) => {
@@ -203,6 +239,7 @@ export const useDiagonalNavigator = (
       if (!touch) return;
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
+      touchLastY = touch.clientY;
       touchStartTarget = targetRef.current;
       if (snapTimerRef.current !== null) {
         window.clearTimeout(snapTimerRef.current);
@@ -213,6 +250,23 @@ export const useDiagonalNavigator = (
     const onTouchMove = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (!touch) return;
+
+      // 指を上へ動かした分だけコンテンツを先へ送る向きを正とする
+      const step = touchLastY - touch.clientY;
+      touchLastY = touch.clientY;
+
+      if (scrollableAncestor(event.target, step)) {
+        /*
+         * 内側がまだスクロールできる間は触らない。
+         * 端に達して引き継ぐときに progress が飛ばないよう、
+         * ここで基準を現在地に更新し続ける。
+         */
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartTarget = targetRef.current;
+        return;
+      }
+
       event.preventDefault();
 
       // 斜めに動く画面に合わせ、縦を主・横を従として斜め軸に射影する

@@ -159,7 +159,7 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
     <div
       ref={root}
       className="fixed inset-0 overflow-hidden"
-      style={{ touchAction: 'none' }}
+      style={{ touchAction: 'pan-y' }}
     >
       <div ref={stage} className="absolute inset-0 will-change-transform">
         {sections.map((section, index) => (
