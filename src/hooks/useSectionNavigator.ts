@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 /** ホイールでセクション 1 つ分を進めるのに必要な deltaY の量 */
-const WHEEL_UNIT = 900;
+const WHEEL_UNIT = 600;
 /** タッチでセクション 1 つ分を進めるのに必要なドラッグ量 (px) */
 const TOUCH_UNIT = 420;
 /** 入力が途切れてからスナップを開始するまでの時間 (ms) */
 const SNAP_IDLE_MS = 140;
+/**
+ * 動かした量がこれを超えたら、進んだ方向のセクションへ確定させる。
+ * 「半分まで動かさないと戻される」と操作していて引っかかるので、
+ * 軽く回した程度でも意図どおり次へ進むようにしている。
+ * ホイールなら約 90、スワイプなら約 63px 分。
+ */
+const COMMIT_RATIO = 0.15;
 /** 1 フレームあたり target へ詰める割合 */
 const EASE_FACTOR = 0.12;
 /** これ以下の差は収束とみなす */
@@ -137,9 +144,22 @@ export const useSectionNavigator = (
     frameRef.current = requestAnimationFrame(tick);
   }, [publish]);
 
-  /** 最寄りのセクションへ吸着させる */
+  /**
+   * 入力が途切れたところで行き先を確定させる。
+   *
+   * 最寄りへ丸めるのではなく「どちらへ動かしたか」で決める。
+   * 丸めると半分を超えるまで戻され続けて、少し回しただけでは
+   * 進めないという操作感になってしまうため。
+   */
   const snap = useCallback(() => {
-    const settled = Math.round(clamp(targetRef.current, 0, count - 1));
+    const anchor = anchorRef.current;
+    const traveled = targetRef.current - anchor;
+
+    const settled =
+      Math.abs(traveled) >= COMMIT_RATIO
+        ? clamp(anchor + Math.sign(traveled), 0, count - 1)
+        : anchor;
+
     targetRef.current = settled;
     anchorRef.current = settled;
     setActiveIndex(settled);
@@ -315,18 +335,63 @@ export const useSectionNavigator = (
 
     const onTouchEnd = () => scheduleSnap();
 
+    /*
+     * スクロールを横取りしている間はブラウザ標準のキー操作も効かなくなるので、
+     * 自前で用意する。通常スクロール側では不要（ブラウザに任せる）。
+     */
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      // 入力中のキーは奪わない
+      if (target?.closest('input, textarea, select, [contenteditable]')) return;
+
+      const current = anchorRef.current;
+
+      switch (event.key) {
+        case 'ArrowDown':
+        case 'ArrowRight':
+        case 'PageDown':
+          event.preventDefault();
+          goTo(current + 1);
+          break;
+        case 'ArrowUp':
+        case 'ArrowLeft':
+        case 'PageUp':
+          event.preventDefault();
+          goTo(current - 1);
+          break;
+        case ' ':
+          // リンクやボタンの上ではその要素の操作を優先する
+          if (target?.closest('a, button')) return;
+          event.preventDefault();
+          goTo(event.shiftKey ? current - 1 : current + 1);
+          break;
+        case 'Home':
+          event.preventDefault();
+          goTo(0);
+          break;
+        case 'End':
+          event.preventDefault();
+          goTo(count - 1);
+          break;
+        default:
+          break;
+      }
+    };
+
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('keydown', onKeyDown);
 
     return () => {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
+      window.removeEventListener('keydown', onKeyDown);
     };
-  }, [applyDelta, count, hijack, runLoop, scheduleSnap]);
+  }, [applyDelta, count, goTo, hijack, runLoop, scheduleSnap]);
 
   /* ---------- 通常スクロールモードの進行度 ---------- */
   useEffect(() => {

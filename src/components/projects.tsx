@@ -7,7 +7,7 @@ import aniflix from "../assets/aniflix.png";
 import dig from "../assets/dig.png";
 import funeGallery from "../assets/fune-gallery.png";
 
-type Work = {
+type Project = {
   title: string;
   link: string;
   /** GitHub リポジトリ。カード右上のアイコンから開く */
@@ -27,7 +27,7 @@ type Work = {
 /*
  * 文言と技術スタックは各リポジトリの README / package.json / Gemfile に合わせている。
  */
-const WORKS: Work[] = [
+const PROJECTS: Project[] = [
   {
     title: "アニめぐる",
     link: "https://animeguru.jp/",
@@ -71,14 +71,14 @@ const WORKS: Work[] = [
   },
 ];
 
-export const Works = () => {
+export const Projects = () => {
   /* ホバー中のカード。背景に流す映像を決める */
-  const [active, setActive] = useState<Work | null>(null);
+  const [active, setActive] = useState<Project | null>(null);
 
   return (
     <section
-      id="works"
-      aria-labelledby="works-heading"
+      id="projects"
+      aria-labelledby="projects-heading"
       data-anim-from="top-right"
       className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 py-6 md:h-full md:min-h-0 md:px-10 md:py-8"
     >
@@ -91,7 +91,7 @@ export const Works = () => {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 hidden overflow-hidden [@media(hover:hover)]:block"
       >
-        {WORKS.map((work) => {
+        {PROJECTS.map((work) => {
           const isActive = active?.title === work.title;
           return work.video ? (
             <video
@@ -119,7 +119,7 @@ export const Works = () => {
         })}
       </div>
 
-      <SectionHeading id="works-heading" title="Works" icon={FaRocket} />
+      <SectionHeading id="projects-heading" title="Projects" icon={FaRocket} />
 
       {/*
         行数を固定したグリッド。1 行の高さが画面から決まるので、
@@ -130,8 +130,8 @@ export const Works = () => {
         ここで内側にスクロール領域を作る必要はない。
         md 以上は 1 画面に収まる固定グリッド。
       */}
-      <ul className="relative mt-4 flex flex-col gap-3 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:grid-rows-3 md:gap-4 lg:grid-cols-3 lg:grid-rows-2">
-        {WORKS.map((item) => (
+      <ul className="relative mt-5 flex flex-col gap-6 md:mt-7 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:grid-rows-3 md:gap-7 lg:grid-cols-3 lg:grid-rows-2 lg:gap-8">
+        {PROJECTS.map((item) => (
           <li
             key={item.title}
             data-anim="item"
