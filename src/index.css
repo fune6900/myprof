@@ -82,6 +82,18 @@
   }
 }
 
+/*
+ * 経歴の年号表。行の区切り線だけを引く。
+ * border-neon 系はグローつきの太い線なので、表の内側に使うと主張が強すぎる。
+ */
+.year-table-head {
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-green) 55%, transparent);
+}
+
+.year-table-row + .year-table-row {
+  border-top: 1px solid color-mix(in srgb, var(--neon-green) 28%, transparent);
+}
+
 /* 内側にスクロール領域を置く場合、ネオンの見た目を崩さないようバーは隠す */
 [data-scrollable]::-webkit-scrollbar {
   display: none;

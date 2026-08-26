@@ -67,7 +67,7 @@ export const Helo = ({ onAdvance }: HeloProps) => {
 
       {/* 次セクションへ。hash によるブラウザ既定のスクロールは打ち消す */}
       <a
-        href="#profile"
+        href="#about"
         onClick={(event) => {
           event.preventDefault();
           onAdvance();

@@ -1,5 +1,4 @@
-import { RiUserStarFill } from "react-icons/ri";
-import fune from "../assets/fune.png";
+import { FaHistory } from "react-icons/fa";
 import { SectionHeading } from "./SectionHeading";
 
 type CareerEntry = {
@@ -21,6 +20,10 @@ const CAREER: CareerEntry[] = [
   { year: "2026年1月", text: "株式会社帆風（クレアテック）に入社" },
 ];
 
+/**
+ * 経歴だけを扱うセクション。基本情報は About セクションに分けている。
+ * 年月と出来事の 2 列を揃えた年号表として並べる。
+ */
 export const Prof = () => {
   return (
     <section
@@ -28,62 +31,32 @@ export const Prof = () => {
       aria-labelledby="profile-heading"
       className="flex min-h-dvh w-full flex-col px-4 py-10 md:h-full md:min-h-0 md:px-10"
     >
-      <SectionHeading id="profile-heading" title="Profile" icon={RiUserStarFill} />
+      <SectionHeading id="profile-heading" title="Profile" icon={FaHistory} />
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
-        <div className="grid w-full max-w-6xl gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-10">
-          {/* 左：プロフィール */}
-          <div
-            data-anim="item"
-            className="rounded-lg border-neon border-neon-green bg-cyber-black p-5"
-          >
-            <div className="flex items-center gap-5">
-              <img
-                src={fune}
-                alt="プロフィール画像"
-                className="h-24 w-24 shrink-0 rounded-full border-2 border-neon-green object-cover md:h-28 md:w-28"
-              />
-              <div className="text-left">
-                <h3 className="text-xl font-bold text-neon-white md:text-2xl">
-                  ステータス
-                </h3>
-                <p className="mt-1 text-sm leading-relaxed text-neon-white md:text-base">
-                  2003年生まれ、宮崎県出身。
-                  <br />
-                  現在は都内でエンジニアとして活動中。
-                </p>
-              </div>
+        <div className="w-full max-w-4xl">
+          <h3 className="mb-3 text-xl font-bold text-neon-white md:text-2xl">経歴</h3>
+
+          <div className="overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black">
+            {/* 表の見出し行。年号表であることを示す */}
+            <div className="year-table-head grid grid-cols-[6rem_1fr] gap-x-3 px-4 py-2 text-xs font-bold uppercase tracking-widest text-neon-green md:grid-cols-[9rem_1fr] md:gap-x-6 md:px-6 md:text-sm">
+              <span>年月</span>
+              <span>出来事</span>
             </div>
 
-            <p className="mt-4 break-all text-sm text-neon-white md:text-base">
-              📧 riku.riku1019@icloud.com
-            </p>
-
-            <h3 className="mt-5 text-xl font-bold text-neon-white md:text-2xl">趣味</h3>
-            <p className="mt-1 text-sm leading-relaxed text-neon-white md:text-base">
-              古着屋巡り、レコード集め、ガジェット、インテリア、
-              <br />
-              ゲーム、アニメ、プログラミング、etc...
-            </p>
-          </div>
-
-          {/* 右：経歴。1 件ずつ右へずらして斜めの流れをつくる */}
-          <div className="text-left">
-            <h3 className="mb-3 text-xl font-bold text-neon-white md:text-2xl">経歴</h3>
-
-            <ol className="flex flex-col gap-2">
-              {CAREER.map((item, index) => (
+            <ol>
+              {CAREER.map((item) => (
                 <li
                   key={item.year}
-                  className="md:[transform:translateX(var(--step))]"
-                  style={{ "--step": `${index * 1.5}rem` } as React.CSSProperties}
+                  data-anim="item"
+                  className="year-table-row grid grid-cols-[6rem_1fr] gap-x-3 px-4 py-3 text-left transition-colors duration-300 hover:bg-[#0a0a0a] md:grid-cols-[9rem_1fr] md:gap-x-6 md:px-6 md:py-4"
                 >
-                  <div
-                    data-anim="item"
-                    className="rounded-md border-neon border-neon-green p-2.5 text-sm text-neon-white transition-colors duration-300 hover:bg-[#0a0a0a] md:p-3 md:text-base"
-                  >
-                    <span className="font-bold">{item.year}：</span> {item.text}
-                  </div>
+                  <span className="text-sm font-bold text-neon-green md:text-base">
+                    {item.year}
+                  </span>
+                  <span className="text-sm leading-relaxed text-neon-white md:text-base">
+                    {item.text}
+                  </span>
                 </li>
               ))}
             </ol>
