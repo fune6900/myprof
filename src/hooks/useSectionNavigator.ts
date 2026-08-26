@@ -346,30 +346,49 @@ export const useSectionNavigator = (
 
       const current = anchorRef.current;
 
+      /*
+       * 縦キーはホイールと同じく、内側にまだ送れるスクロール領域があれば
+       * ブラウザ既定の動きに任せる。横キーは常にセクション移動なので、
+       * 内側を読んでいる途中でも隣のセクションへ抜けられる。
+       */
+      const defersToInner = (direction: number) =>
+        scrollableAncestor(target, direction) !== null;
+
       switch (event.key) {
         case 'ArrowDown':
-        case 'ArrowRight':
         case 'PageDown':
+          if (defersToInner(1)) return;
           event.preventDefault();
           goTo(current + 1);
           break;
         case 'ArrowUp':
-        case 'ArrowLeft':
         case 'PageUp':
+          if (defersToInner(-1)) return;
+          event.preventDefault();
+          goTo(current - 1);
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goTo(current + 1);
+          break;
+        case 'ArrowLeft':
           event.preventDefault();
           goTo(current - 1);
           break;
         case ' ':
           // リンクやボタンの上ではその要素の操作を優先する
           if (target?.closest('a, button')) return;
+          if (defersToInner(event.shiftKey ? -1 : 1)) return;
           event.preventDefault();
           goTo(event.shiftKey ? current - 1 : current + 1);
           break;
         case 'Home':
+          if (defersToInner(-1)) return;
           event.preventDefault();
           goTo(0);
           break;
         case 'End':
+          if (defersToInner(1)) return;
           event.preventDefault();
           goTo(count - 1);
           break;

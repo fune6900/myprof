@@ -83,20 +83,67 @@
 }
 
 /*
- * 経歴の年号表。行の区切り線だけを引く。
- * border-neon 系はグローつきの太い線なので、表の内側に使うと主張が強すぎる。
+ * 経歴のターミナル表示。
+ * border-neon 系はグローつきの太い線なので、ウィンドウの内側の仕切りには
+ * グローのない細線を使う。
  */
-.year-table-head {
-  border-bottom: 1px solid color-mix(in srgb, var(--neon-green) 55%, transparent);
+.terminal-bar {
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-green) 45%, transparent);
+  background-color: color-mix(in srgb, var(--neon-green) 8%, transparent);
 }
 
-.year-table-row + .year-table-row {
-  border-top: 1px solid color-mix(in srgb, var(--neon-green) 28%, transparent);
+.terminal-status {
+  border-top: 1px solid color-mix(in srgb, var(--neon-green) 45%, transparent);
+  background-color: color-mix(in srgb, var(--neon-green) 8%, transparent);
+}
+
+.terminal-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--neon-green) 55%, transparent);
+}
+
+/* CRT 風の走査線。読みづらくならない濃さに留める */
+.terminal-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--neon-green) 5%, transparent) 0 1px,
+    transparent 1px 4px
+  );
+}
+
+.terminal-cursor::after {
+  content: "▊";
+  animation: terminal-blink 1.1s step-end infinite;
+}
+
+@keyframes terminal-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-cursor::after {
+    animation: none;
+  }
 }
 
 /* 内側にスクロール領域を置く場合、ネオンの見た目を崩さないようバーは隠す */
 [data-scrollable]::-webkit-scrollbar {
   display: none;
+}
+
+/* スクロール領域はキーボードでも操作するので、フォーカス位置は示す */
+[data-scrollable]:focus-visible {
+  outline: 2px solid var(--neon-green);
+  outline-offset: -2px;
 }
 
 .dotgothic16 {
