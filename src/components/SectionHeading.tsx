@@ -8,7 +8,7 @@ type SectionHeadingProps = {
 };
 
 /**
- * Profile / Skills / Works で共通のネオンバッジ見出し。
+ * Profile / Skills / Projects で共通のネオンバッジ見出し。
  * 3 セクションで同じ markup を持っていたのでまとめた。
  */
 export const SectionHeading = ({ id, title, icon: Icon }: SectionHeadingProps) => {

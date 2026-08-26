@@ -33,7 +33,7 @@ export const Helo = ({ onAdvance }: HeloProps) => {
   return (
     <section
       id="hero"
-      className="relative flex h-full w-full flex-col items-center justify-center px-4 text-center"
+      className="relative flex min-h-dvh w-full flex-col items-center justify-center px-4 text-center md:h-full md:min-h-0"
     >
       <div>
         <img

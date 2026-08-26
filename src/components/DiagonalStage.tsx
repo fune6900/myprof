@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createScope, createTimeline, stagger, utils, type Scope } from 'animejs';
-import type { DiagonalNavigator } from '../hooks/useDiagonalNavigator';
+import type { SectionNavigator } from '../hooks/useSectionNavigator';
+import { TITLE_FROM, TITLE_TO, isItemDirection, itemStates } from './animStates';
 
 export type StageSection = {
   /** URL の hash とアンカーリンクに使う */
@@ -12,19 +13,11 @@ export type StageSection = {
 
 type DiagonalStageProps = {
   sections: readonly StageSection[];
-  navigator: DiagonalNavigator;
+  navigator: SectionNavigator;
 };
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
-
-/** 見出しの開始状態と着地状態 */
-const TITLE_FROM = { opacity: 0, y: -32, scale: 0.92 };
-const TITLE_TO = { opacity: [0, 1], y: [-32, 0], scale: [0.92, 1] };
-
-/** 各アイテムの開始状態と着地状態。右下から斜めに入ってくる */
-const ITEM_FROM = { opacity: 0, x: 56, y: 56, scale: 0.94 };
-const ITEM_TO = { opacity: [0, 1], x: [56, 0], y: [56, 0], scale: [0.94, 1] };
 
 /**
  * セクションを仮想キャンバス上の斜め線に並べ、ステージ全体を逆向きに動かす。
@@ -71,8 +64,14 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
          * seek しただけでは素の CSS（opacity: 1）のまま残ってしまう。
          * スタガーの後半が最初から見えてしまうので、開始前の状態を先に置く。
          */
+        const rawDirection = sectionEl.querySelector<HTMLElement>('[data-anim-from]')
+          ?.dataset.animFrom;
+        const { from: itemFrom, to: itemTo } = itemStates(
+          isItemDirection(rawDirection) ? rawDirection : 'bottom-right',
+        );
+
         utils.set(titles, TITLE_FROM);
-        utils.set(items, ITEM_FROM);
+        utils.set(items, itemFrom);
 
         const tl = createTimeline({
           autoplay: false,
@@ -84,7 +83,7 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
         }
 
         if (items.length) {
-          tl.add(items, ITEM_TO, stagger(70, { start: 150 }));
+          tl.add(items, itemTo, stagger(70, { start: 150 }));
         }
 
         return tl;
@@ -133,7 +132,7 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
     <div
       ref={root}
       className="fixed inset-0 overflow-hidden"
-      style={{ touchAction: 'none' }}
+      style={{ touchAction: 'pan-y' }}
     >
       <div ref={stage} className="absolute inset-0 will-change-transform">
         {sections.map((section, index) => (

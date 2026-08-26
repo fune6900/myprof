@@ -2,16 +2,18 @@
 @plugin "neo-metro-city";
 
 /*
- * 斜め展開ナビゲーションがスクロールを完全にジャックするため、
- * ドキュメント側のスクロールは殺しておく。
- * overscroll-behavior はモバイルの引っ張って更新を止めるために要る。
+ * スマホは普通の縦スクロール。ドキュメント側のスクロールを殺すのは
+ * 斜め展開に切り替わる幅（App の DIAGONAL_QUERY と揃える）から。
  */
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
+@media (min-width: 768px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
 }
+
 
 /*
  * neo-metro-city は text-neon-white を定義していないため、
@@ -78,6 +80,11 @@ body {
   .spotlight-card::after {
     display: none;
   }
+}
+
+/* 内側にスクロール領域を置く場合、ネオンの見た目を崩さないようバーは隠す */
+[data-scrollable]::-webkit-scrollbar {
+  display: none;
 }
 
 .dotgothic16 {

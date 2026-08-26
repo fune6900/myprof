@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
-import type { DiagonalNavigator } from '../hooks/useDiagonalNavigator';
+import type { SectionNavigator } from '../hooks/useSectionNavigator';
 
 type SectionIndicatorProps = {
   sections: readonly { id: string; label: string }[];
-  navigator: DiagonalNavigator;
+  navigator: SectionNavigator;
 };
 
 /**
