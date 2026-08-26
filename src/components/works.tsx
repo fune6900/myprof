@@ -80,7 +80,7 @@ export const Works = () => {
       id="works"
       aria-labelledby="works-heading"
       data-anim-from="top-right"
-      className="relative flex h-full w-full flex-col overflow-hidden px-3 py-6 md:px-10 md:py-8"
+      className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 py-6 md:h-full md:min-h-0 md:px-10 md:py-8"
     >
       {/*
         ホバー中の作品を背景に大きく流す。
@@ -126,15 +126,11 @@ export const Works = () => {
         画面が低くても見出しへせり上がって重なることがない。
       */}
       {/*
-        狭い画面は 1 列にして縦スクロール。
-        data-scrollable が付いた領域はナビゲーションがスワイプを奪わず、
-        端まで来たところでセクション移動へ引き継がれる。
-        md 以上は 1 画面に収まる固定グリッドのまま。
+        狭い画面は 1 列。ページ全体が普通にスクロールするので、
+        ここで内側にスクロール領域を作る必要はない。
+        md 以上は 1 画面に収まる固定グリッド。
       */}
-      <ul
-        data-scrollable
-        className="relative mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain [scrollbar-width:none] md:grid md:grid-cols-2 md:grid-rows-3 md:gap-4 md:overflow-visible lg:grid-cols-3 lg:grid-rows-2"
-      >
+      <ul className="relative mt-4 flex flex-col gap-3 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:grid-rows-3 md:gap-4 lg:grid-cols-3 lg:grid-rows-2">
         {WORKS.map((item) => (
           <li
             key={item.title}

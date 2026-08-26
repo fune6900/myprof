@@ -12,13 +12,17 @@ const EASE_FACTOR = 0.12;
 const SETTLE_EPSILON = 0.0005;
 
 /**
- * 斜め展開ナビゲーションの中核。
+ * セクション間の移動を司る。
  *
- * progress は「0 から count-1 までの小数」で、1.4 ならセクション 1 と 2 の
- * あいだの 40% 地点を意味する。毎フレーム変化するので React state には置かず、
- * ref + 購読で配る。整数の activeIndex だけが state（inert と現在地表示に使う）。
+ * hijack が true のとき（広い画面）は入力を横取りして斜めに展開する。
+ * false のとき（スマホ）は普通の縦スクロールに任せ、進行度だけを
+ * スクロール位置から読み取る。どちらのモードでも progress の意味は同じで、
+ * 1.4 ならセクション 1 と 2 のあいだ 40% 地点を表す。
+ *
+ * progress は毎フレーム変わるので React state には置かず ref + 購読で配る。
+ * 整数の activeIndex だけが state（現在地表示と inert に使う）。
  */
-export type DiagonalNavigator = {
+export type SectionNavigator = {
   /** 現在アクティブなセクション。再描画を伴う */
   activeIndex: number;
   /** 指定セクションへ移動する */
@@ -29,6 +33,8 @@ export type DiagonalNavigator = {
   getProgress: () => number;
   /** ユーザーがアニメーション減少を希望しているか */
   prefersReducedMotion: boolean;
+  /** 入力を横取りしているか（斜め展開モードか） */
+  hijack: boolean;
 };
 
 const clamp = (value: number, min: number, max: number) =>
@@ -74,9 +80,10 @@ const indexFromHash = (ids: readonly string[]): number | null => {
   return index === -1 ? null : index;
 };
 
-export const useDiagonalNavigator = (
+export const useSectionNavigator = (
   ids: readonly string[],
-): DiagonalNavigator => {
+  hijack: boolean,
+): SectionNavigator => {
   const count = ids.length;
 
   /** 起動時の URL が指すセクション。effect より前に確定させる */
@@ -105,6 +112,8 @@ export const useDiagonalNavigator = (
       listener(progressRef.current);
     }
   }, []);
+
+  /* ---------- 斜め展開モード（入力を横取りする） ---------- */
 
   /** rAF ループ。収束したら自分で止まる */
   const runLoop = useCallback(() => {
@@ -144,9 +153,28 @@ export const useDiagonalNavigator = (
     snapTimerRef.current = window.setTimeout(snap, SNAP_IDLE_MS);
   }, [snap]);
 
+  /* ---------- 共通 ---------- */
+
   const goTo = useCallback(
     (index: number) => {
       const next = clamp(Math.round(index), 0, count - 1);
+
+      if (!hijack) {
+        // 普通のスクロールに任せる。
+        // 要素の scrollIntoView だと、直後の再描画で要素の状態が変わった
+        // ときにスムーススクロールが取り消されることがあるため、
+        // ビューポート基準で指示する
+        const el = document.getElementById(ids[next]);
+        if (el) {
+          window.scrollTo({
+            top: el.getBoundingClientRect().top + window.scrollY,
+            behavior: reducedMotionRef.current ? 'auto' : 'smooth',
+          });
+        }
+        setActiveIndex(next);
+        return;
+      }
+
       if (snapTimerRef.current !== null) {
         window.clearTimeout(snapTimerRef.current);
         snapTimerRef.current = null;
@@ -156,7 +184,7 @@ export const useDiagonalNavigator = (
       setActiveIndex(next);
       runLoop();
     },
-    [count, runLoop],
+    [count, hijack, ids, runLoop],
   );
 
   /**
@@ -219,8 +247,10 @@ export const useDiagonalNavigator = (
     window.history.replaceState(null, '', `#${id}`);
   }, [ids, activeIndex]);
 
-  /* 入力のジャック */
+  /* ---------- 斜め展開モードの入力ジャック ---------- */
   useEffect(() => {
+    if (!hijack) return;
+
     const onWheel = (event: WheelEvent) => {
       // 内側にまだ動かせるスクロール領域があるならそちらを優先する
       if (scrollableAncestor(event.target, event.deltaY)) return;
@@ -285,58 +315,72 @@ export const useDiagonalNavigator = (
 
     const onTouchEnd = () => scheduleSnap();
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      // 入力中やリンク操作中のキーは奪わない
-      if (target?.closest('input, textarea, select, [contenteditable]')) return;
-
-      const current = anchorRef.current;
-
-      switch (event.key) {
-        case 'ArrowDown':
-        case 'ArrowRight':
-        case 'PageDown':
-          event.preventDefault();
-          goTo(current + 1);
-          break;
-        case 'ArrowUp':
-        case 'ArrowLeft':
-        case 'PageUp':
-          event.preventDefault();
-          goTo(current - 1);
-          break;
-        case ' ':
-          if (target?.closest('a, button')) return;
-          event.preventDefault();
-          goTo(event.shiftKey ? current - 1 : current + 1);
-          break;
-        case 'Home':
-          event.preventDefault();
-          goTo(0);
-          break;
-        case 'End':
-          event.preventDefault();
-          goTo(count - 1);
-          break;
-        default:
-          break;
-      }
-    };
-
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('touchend', onTouchEnd);
-    window.addEventListener('keydown', onKeyDown);
 
     return () => {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('keydown', onKeyDown);
     };
-  }, [applyDelta, count, goTo, runLoop, scheduleSnap]);
+  }, [applyDelta, count, hijack, runLoop, scheduleSnap]);
+
+  /* ---------- 通常スクロールモードの進行度 ---------- */
+  useEffect(() => {
+    if (hijack) return;
+
+    let frame: number | null = null;
+
+    const read = () => {
+      frame = null;
+
+      const y = window.scrollY;
+      const tops = ids.map((id) => {
+        const el = document.getElementById(id);
+        return el ? el.getBoundingClientRect().top + y : 0;
+      });
+
+      // y がどのセクションの範囲にいるかを探し、その中での進み具合を足す
+      let index = 0;
+      while (index < tops.length - 1 && y >= tops[index + 1]) index += 1;
+
+      const span = (tops[index + 1] ?? tops[index]) - tops[index];
+      const fraction = span > 0 ? clamp((y - tops[index]) / span, 0, 1) : 0;
+
+      progressRef.current = clamp(index + fraction, 0, count - 1);
+      publish();
+
+      const nearest = Math.round(progressRef.current);
+      setActiveIndex((current) => (current === nearest ? current : nearest));
+    };
+
+    const onScroll = () => {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(read);
+    };
+
+    read();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [count, hijack, ids, publish]);
+
+  /* 起動時の hash へ移動する（通常スクロールはブラウザ任せにしない） */
+  useEffect(() => {
+    if (hijack || start === 0) return;
+    const el = document.getElementById(ids[start]);
+    if (el) {
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY });
+    }
+  }, [hijack, ids, start]);
 
   /* アンマウント時に走っているものを止める */
   useEffect(
@@ -348,7 +392,14 @@ export const useDiagonalNavigator = (
   );
 
   return useMemo(
-    () => ({ activeIndex, goTo, subscribe, getProgress, prefersReducedMotion }),
-    [activeIndex, goTo, subscribe, getProgress, prefersReducedMotion],
+    () => ({
+      activeIndex,
+      goTo,
+      subscribe,
+      getProgress,
+      prefersReducedMotion,
+      hijack,
+    }),
+    [activeIndex, goTo, subscribe, getProgress, prefersReducedMotion, hijack],
   );
 };

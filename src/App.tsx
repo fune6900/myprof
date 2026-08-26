@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { DiagonalStage, type StageSection } from './components/DiagonalStage';
+import { PlainStage } from './components/PlainStage';
 import { NeonGrid } from './components/NeonGrid';
 import { SectionIndicator } from './ui-component/SectionIndicator';
 import ScrollComponent from './ui-component/ScrollComponent/ScrollComponent';
-import { useDiagonalNavigator } from './hooks/useDiagonalNavigator';
+import { useSectionNavigator } from './hooks/useSectionNavigator';
+import { useMediaQuery } from './hooks/useMediaQuery';
 import { Helo } from './components/helo';
 import { Prof } from './components/prof';
 import { Skill } from './components/skill';
@@ -12,8 +14,16 @@ import { Works } from './components/works';
 /** hash とアンカーリンクの対象。並び順がそのまま画面の並び順になる */
 const SECTION_IDS = ['hero', 'profile', 'skills', 'works'] as const;
 
+/**
+ * 斜め展開に切り替える下限。
+ * スマホでスクロールを横取りすると慣性スクロールと競合して操作しづらいので、
+ * 狭い画面では普通の縦スクロールに任せる。
+ */
+const DIAGONAL_QUERY = '(min-width: 768px)';
+
 function App() {
-  const navigator = useDiagonalNavigator(SECTION_IDS);
+  const hijack = useMediaQuery(DIAGONAL_QUERY);
+  const navigator = useSectionNavigator(SECTION_IDS, hijack);
   const { goTo, activeIndex } = navigator;
 
   const sections = useMemo<StageSection[]>(
@@ -30,8 +40,12 @@ function App() {
     <div className="dotgothic16">
       <NeonGrid navigator={navigator} />
       <SectionIndicator sections={sections} navigator={navigator} />
-      <ScrollComponent onBackToTop={() => goTo(0)} disabled={activeIndex === 0} />
-      <DiagonalStage sections={sections} navigator={navigator} />
+      <ScrollComponent onBackToTop={() => goTo(0)} atTop={activeIndex === 0} />
+      {hijack ? (
+        <DiagonalStage sections={sections} navigator={navigator} />
+      ) : (
+        <PlainStage sections={sections} navigator={navigator} />
+      )}
     </div>
   );
 }

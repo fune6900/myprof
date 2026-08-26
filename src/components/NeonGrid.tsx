@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react';
-import type { DiagonalNavigator } from '../hooks/useDiagonalNavigator';
+import type { SectionNavigator } from '../hooks/useSectionNavigator';
 
 /** ステージに対する背景の移動比。小さいほど遠くに見える */
 const PARALLAX = 0.28;
 
 type NeonGridProps = {
-  navigator: DiagonalNavigator;
+  navigator: SectionNavigator;
 };
 
 /**

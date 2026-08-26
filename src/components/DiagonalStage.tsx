@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { createScope, createTimeline, stagger, utils, type Scope } from 'animejs';
-import type { DiagonalNavigator } from '../hooks/useDiagonalNavigator';
+import type { SectionNavigator } from '../hooks/useSectionNavigator';
+import { TITLE_FROM, TITLE_TO, isItemDirection, itemStates } from './animStates';
 
 export type StageSection = {
   /** URL の hash とアンカーリンクに使う */
@@ -12,39 +13,11 @@ export type StageSection = {
 
 type DiagonalStageProps = {
   sections: readonly StageSection[];
-  navigator: DiagonalNavigator;
+  navigator: SectionNavigator;
 };
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
-
-/** 見出しの開始状態と着地状態 */
-const TITLE_FROM = { opacity: 0, y: -32, scale: 0.92 };
-const TITLE_TO = { opacity: [0, 1], y: [-32, 0], scale: [0.92, 1] };
-
-/**
- * アイテムがどの方向から入ってくるか。
- * セクションの data-anim-from で切り替える（既定は右下）。
- */
-const ITEM_DIRECTIONS = {
-  'bottom-right': { x: 56, y: 56 },
-  'top-right': { x: 72, y: -72 },
-  'bottom-left': { x: -56, y: 56 },
-  'top-left': { x: -72, y: -72 },
-} as const;
-
-type ItemDirection = keyof typeof ITEM_DIRECTIONS;
-
-const isItemDirection = (value: string | undefined): value is ItemDirection =>
-  value !== undefined && value in ITEM_DIRECTIONS;
-
-const itemStates = (direction: ItemDirection) => {
-  const { x, y } = ITEM_DIRECTIONS[direction];
-  return {
-    from: { opacity: 0, x, y, scale: 0.94 },
-    to: { opacity: [0, 1], x: [x, 0], y: [y, 0], scale: [0.94, 1] },
-  };
-};
 
 /**
  * セクションを仮想キャンバス上の斜め線に並べ、ステージ全体を逆向きに動かす。

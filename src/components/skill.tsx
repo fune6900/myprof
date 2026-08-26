@@ -73,7 +73,7 @@ export const Skill = () => {
     <section
       id="skills"
       aria-labelledby="skills-heading"
-      className="flex h-full w-full flex-col px-4 py-10 md:px-10"
+      className="flex min-h-dvh w-full flex-col px-4 py-10 md:h-full md:min-h-0 md:px-10"
     >
       <SectionHeading id="skills-heading" title="Skills" icon={FaCode} />
 
