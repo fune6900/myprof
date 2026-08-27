@@ -45,7 +45,7 @@ export const Prof = () => {
     <section
       id="profile"
       aria-labelledby="profile-heading"
-      className="flex min-h-dvh w-full flex-col px-4 py-10 md:h-full md:min-h-0 md:px-10"
+      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:py-10"
     >
       <SectionHeading id="profile-heading" title="Profile" icon={FaHistory} />
 

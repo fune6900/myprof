@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { animate, createScope, onScroll, stagger, utils, type Scope } from 'animejs';
 import type { SectionNavigator } from '../hooks/useSectionNavigator';
 import type { StageSection } from './DiagonalStage';
 import { ITEM_DIRECTIONS, TITLE_FROM, TITLE_TO, itemStates } from './animStates';
+import { Marquee } from '../ui-component/Marquee';
 
 type PlainStageProps = {
   sections: readonly StageSection[];
@@ -80,10 +81,15 @@ export const PlainStage = ({ sections, navigator }: PlainStageProps) => {
 
   return (
     <div ref={root}>
-      {sections.map((section) => (
-        <div key={section.id} data-section={section.id}>
-          {section.content}
-        </div>
+      {sections.map((section, index) => (
+        <Fragment key={section.id}>
+          {/* セクションの継ぎ目に、次のセクション名を流す帯を挟む */}
+          {index > 0 && (
+            <Marquee text={section.label} reverse={index % 2 === 1} />
+          )}
+
+          <div data-section={section.id}>{section.content}</div>
+        </Fragment>
       ))}
     </div>
   );

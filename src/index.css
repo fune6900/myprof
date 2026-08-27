@@ -31,6 +31,16 @@
 }
 
 /*
+ * プラグインの text-neon-green は、base の `*` が要素ごとに
+ * --neon-text-color を戻すため自分自身にしか効かない。
+ * 入れ子の中身までまとめて緑にしたいところで使う。
+ */
+.text-neon-green-all,
+.text-neon-green-all * {
+  --neon-text-color: var(--neon-green);
+}
+
+/*
  * 背景グリッド。NeonGrid がステージより遅い速度で動かして視差をつくる。
  * 中央を明るく、端に向かって消える mask を掛けてコンテンツの邪魔をしないようにする。
  */
@@ -131,6 +141,96 @@
 
 @media (prefers-reduced-motion: reduce) {
   .terminal-cursor::after {
+    animation: none;
+  }
+}
+
+/* ヘッダーの時計が動いていることを示すランプ */
+.clock-lamp {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background-color: var(--neon-green);
+  box-shadow: 0 0 6px var(--neon-green);
+  animation: terminal-blink 2s step-end infinite;
+}
+
+/*
+ * カーソルを遅れて追いかけるリング。
+ * 位置は transform で動かすので、開閉は幅と高さで見せる。
+ */
+.cursor-ring {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  border: 1px solid var(--neon-green);
+  box-shadow:
+    0 0 6px color-mix(in srgb, var(--neon-green) 60%, transparent),
+    inset 0 0 6px color-mix(in srgb, var(--neon-green) 40%, transparent);
+  opacity: 0;
+  transition:
+    width 0.25s ease,
+    height 0.25s ease,
+    opacity 0.3s ease,
+    background-color 0.25s ease;
+}
+
+.cursor-ring[data-visible="true"] {
+  opacity: 1;
+}
+
+/* リンクやボタンの上では開いて、押せることを示す */
+.cursor-ring[data-active="true"] {
+  width: 3.25rem;
+  height: 3.25rem;
+  background-color: color-mix(in srgb, var(--neon-green) 12%, transparent);
+}
+
+/*
+ * セクションの合間を流れる文字列の帯。
+ * 同じ内容が 2 つ並んでいるので、-50% で 1 周して継ぎ目なく戻る。
+ */
+.marquee-band {
+  overflow: hidden;
+  white-space: nowrap;
+  border-top: 1px solid color-mix(in srgb, var(--neon-green) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-green) 40%, transparent);
+  background-color: color-mix(in srgb, var(--neon-green) 6%, transparent);
+  padding-block: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.marquee-band,
+.marquee-band * {
+  --neon-text-color: var(--neon-green);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation-name: marquee-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+
+  .clock-lamp {
     animation: none;
   }
 }

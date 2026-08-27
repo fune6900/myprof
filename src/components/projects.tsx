@@ -80,7 +80,7 @@ export const Projects = () => {
       id="projects"
       aria-labelledby="projects-heading"
       data-anim-from="top-right"
-      className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 py-6 md:h-full md:min-h-0 md:px-10 md:py-8"
+      className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 pb-6 pt-20 md:h-full md:min-h-0 md:px-10 md:py-8"
     >
       {/*
         ホバー中の作品を背景に大きく流す。
