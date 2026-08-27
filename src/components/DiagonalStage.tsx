@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { createScope, createTimeline, stagger, utils, type Scope } from 'animejs';
 import type { SectionNavigator } from '../hooks/useSectionNavigator';
 import { TITLE_FROM, TITLE_TO, isItemDirection, itemStates } from './animStates';
+import { Marquee } from '../ui-component/Marquee';
 
 export type StageSection = {
   /** URL の hash とアンカーリンクに使う */
@@ -44,6 +45,9 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
     let stepX = window.innerWidth;
     let stepY = window.innerHeight;
     let timelines: ReturnType<typeof createTimeline>[] = [];
+
+    /* セクション i と i+1 の中間に置いた帯。移動中だけ濃く見せる */
+    const seamEls = Array.from(rootEl.querySelectorAll<HTMLElement>('[data-seam]'));
 
     scope.current = createScope({ root }).add(() => {
       const sectionEls = Array.from(
@@ -97,6 +101,12 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
       if (rootEl.scrollTop !== 0) rootEl.scrollTop = 0;
       if (rootEl.scrollLeft !== 0) rootEl.scrollLeft = 0;
 
+      for (let i = 0; i < seamEls.length; i += 1) {
+        // ちょうど中間 (i + 0.5) に来たときだけ全部見せる
+        const nearness = clamp(1 - Math.abs(progress - (i + 0.5)) * 2, 0, 1);
+        seamEls[i].style.opacity = String(nearness);
+      }
+
       for (let i = 0; i < timelines.length; i += 1) {
         const tl = timelines[i];
         if (!tl.duration) continue;
@@ -147,6 +157,28 @@ export const DiagonalStage = ({ sections, navigator }: DiagonalStageProps) => {
             }}
           >
             {section.content}
+          </div>
+        ))}
+
+        {/*
+          セクションの継ぎ目に流す帯。
+          セクション i の位置が (i, i) なので、その中間の (i+0.5, i+0.5) に
+          置くと、移動のちょうど半分で画面の中央を横切る。
+        */}
+        {sections.slice(1).map((section, index) => (
+          <div
+            key={`seam-${section.id}`}
+            data-seam
+            className="pointer-events-none absolute inset-0 flex h-screen w-screen items-center opacity-0"
+            style={{
+              transform: `translate(${(index + 0.5) * 100}vw, ${(index + 0.5) * 100}vh)`,
+            }}
+          >
+            <Marquee
+              text={section.label}
+              reverse={index % 2 === 1}
+              className="w-full"
+            />
           </div>
         ))}
       </div>

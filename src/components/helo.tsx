@@ -3,6 +3,7 @@ import { animate, scrambleText } from "animejs";
 import { SocialLinks } from "../ui-component/SocialLinks/SocialLinks";
 import fune from "../assets/fune.png";
 import { FaChevronDown } from "react-icons/fa";
+import { onBootDone } from "../lib/boot";
 
 type HeloProps = {
   /** 次のセクションへ進む。アンカーの既定動作は使わない */
@@ -12,21 +13,29 @@ type HeloProps = {
 export const Helo = ({ onAdvance }: HeloProps) => {
   const name = useRef<HTMLHeadingElement>(null);
 
-  /* 名前をスクランブルから組み上げる。動きを減らす設定なら何もしない */
+  /*
+   * 名前をスクランブルから組み上げる。動きを減らす設定なら何もしない。
+   * オープニングの裏で終わってしまわないよう、明けてから始める。
+   */
   useEffect(() => {
     const el = name.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const animation = animate(el, {
-      textContent: scrambleText({ chars: "A-Za-z0-9!%#_", revealRate: 14 }),
-      duration: 2600,
-      delay: 400,
-      ease: "linear",
+    let animation: ReturnType<typeof animate> | null = null;
+
+    const unsubscribe = onBootDone(() => {
+      animation = animate(el, {
+        textContent: scrambleText({ chars: "A-Za-z0-9!%#_", revealRate: 14 }),
+        duration: 2600,
+        delay: 400,
+        ease: "linear",
+      });
     });
 
     return () => {
-      animation.revert();
+      unsubscribe();
+      animation?.revert();
     };
   }, []);
 

@@ -27,14 +27,14 @@ const HOBBIES = [
 
 /**
  * 自身の基本情報だけを扱うセクション。
- * 経歴は年号表として Prof セクションに分けている。
+ * 経歴はターミナルのログとして Prof セクションに分けている。
  */
 export const About = () => {
   return (
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="flex min-h-dvh w-full flex-col px-4 py-10 md:h-full md:min-h-0 md:px-10"
+      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:py-10"
     >
       <SectionHeading id="about-heading" title="About" icon={RiUserStarFill} />
 

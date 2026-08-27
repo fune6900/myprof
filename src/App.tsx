@@ -3,6 +3,9 @@ import { DiagonalStage, type StageSection } from './components/DiagonalStage';
 import { PlainStage } from './components/PlainStage';
 import { NeonGrid } from './components/NeonGrid';
 import { SectionIndicator } from './ui-component/SectionIndicator';
+import { SiteHeader } from './ui-component/SiteHeader';
+import { Opening } from './ui-component/Opening';
+import { CursorFollower } from './ui-component/CursorFollower';
 import ScrollComponent from './ui-component/ScrollComponent/ScrollComponent';
 import { useSectionNavigator } from './hooks/useSectionNavigator';
 import { useMediaQuery } from './hooks/useMediaQuery';
@@ -42,7 +45,10 @@ function App() {
     <div className="dotgothic16">
       <NeonGrid navigator={navigator} />
       <SectionIndicator sections={sections} navigator={navigator} />
+      <SiteHeader sections={sections} navigator={navigator} />
       <ScrollComponent onBackToTop={() => goTo(0)} atTop={activeIndex === 0} />
+      <CursorFollower />
+      <Opening />
       {hijack ? (
         <DiagonalStage sections={sections} navigator={navigator} />
       ) : (
