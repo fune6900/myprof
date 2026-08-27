@@ -153,12 +153,18 @@ export const Projects = () => {
                 event.currentTarget.style.setProperty("--my", `${event.clientY - rect.top}px`);
               }}
             >
-              {/* 画像だけが伸縮して余りを吸収する。文字側は潰さない */}
+              {/*
+                画像だけが伸縮して余りを吸収する。文字側は潰さない。
+
+                object-contain なのは、作品ごとに画像の縦横比が違うため。
+                cover にすると枠に合わせて切り取られ、下側が見切れてしまう
+                （縦長の myprof は半分以上が切れる）。
+              */}
               <img
                 src={item.img}
                 alt={`${item.title} トップページ`}
                 loading="lazy"
-                className="aspect-video w-full rounded object-cover object-top md:aspect-auto md:flex-1 md:[min-height:3.5rem]"
+                className="aspect-video w-full rounded object-contain md:aspect-auto md:flex-1 md:[min-height:3.5rem]"
               />
 
               <h3 className="mt-1.5 flex shrink-0 flex-wrap items-baseline gap-x-2 text-sm font-bold text-neon-white md:text-lg">
