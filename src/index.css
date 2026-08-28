@@ -145,6 +145,12 @@
   }
 }
 
+/* 基本情報のコードパネル。ファイル名の帯だけ薄く敷く */
+.code-bar {
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-green) 45%, transparent);
+  background-color: color-mix(in srgb, var(--neon-green) 8%, transparent);
+}
+
 /* ヘッダーの時計が動いていることを示すランプ */
 .clock-lamp {
   width: 0.4rem;

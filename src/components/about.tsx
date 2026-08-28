@@ -1,18 +1,22 @@
+import type { ReactNode } from "react";
 import { RiUserStarFill } from "react-icons/ri";
 import fune from "../assets/fune.png";
 import { SectionHeading } from "./SectionHeading";
 
 type InfoEntry = {
-  label: string;
-  value: string;
+  key: string;
+  /** 数値はそのまま、文字列は "..." で囲んで出す */
+  value: string | number;
 };
 
-const INFO: InfoEntry[] = [
-  { label: "名前", value: "Riku Funagayama" },
-  { label: "生年", value: "2003年" },
-  { label: "出身", value: "宮崎県" },
-  { label: "拠点", value: "東京都（都内でエンジニアとして活動中）" },
-  { label: "連絡先", value: "riku.riku1019@icloud.com" },
+const PROFILE: InfoEntry[] = [
+  { key: "name", value: "Riku Funagayama" },
+  { key: "born", value: 2003 },
+  { key: "from", value: "宮崎県" },
+  { key: "based", value: "東京都" },
+  { key: "role", value: "Engineer" },
+  { key: "status", value: "都内でエンジニアとして活動中" },
+  { key: "contact", value: "riku.riku1019@icloud.com" },
 ];
 
 const HOBBIES = [
@@ -25,11 +29,55 @@ const HOBBIES = [
   "プログラミング",
 ];
 
+/*
+ * 構文強調のトークン。
+ * base の `*` が要素ごとに --neon-text-color を戻すので、
+ * 色は入れ子で継がせず span ひとつずつに持たせる。
+ */
+const Punct = ({ children }: { children: ReactNode }) => (
+  <span className="text-neon-green opacity-40">{children}</span>
+);
+
+const Value = ({ value }: { value: string | number }) =>
+  typeof value === "number" ? (
+    <span className="text-neon-orange">{value}</span>
+  ) : (
+    <span className="text-neon-blue">&quot;{value}&quot;</span>
+  );
+
 /**
  * 自身の基本情報だけを扱うセクション。
  * 経歴はターミナルのログとして Prof セクションに分けている。
+ *
+ * 基本情報は TypeScript のオブジェクトリテラルの体裁で見せる。
+ * 等幅なので、キーの幅を 9ch に固定するだけで値が縦に揃う。
  */
 export const About = () => {
+  /*
+   * 行は flex（行番号 + 中身）なので、中身は必ず span 1 つにまとめる。
+   * 直下にトークンを並べるとトークン同士が別々の flex item になり、
+   * 間の空白が落ちて詰まって表示されてしまう。
+   */
+  const lines: ReactNode[] = [
+    <span>
+      <span className="text-neon-pink">const</span>{" "}
+      <span className="text-neon-white">profile</span>
+      <Punct>:</Punct> <span className="text-neon-yellow">Profile</span>{" "}
+      <Punct>= {"{"}</Punct>
+    </span>,
+    ...PROFILE.map((item) => (
+      <span className="pl-[2ch]">
+        <span className="inline-block min-w-[9ch]">
+          <span className="text-neon-green">{item.key}</span>
+          <Punct>:</Punct>
+        </span>
+        <Value value={item.value} />
+        <Punct>,</Punct>
+      </span>
+    )),
+    <Punct>{"};"}</Punct>,
+  ];
+
   return (
     <section
       id="about"
@@ -58,21 +106,29 @@ export const About = () => {
 
           {/* 右：基本情報と趣味。1 段ずらして斜めの流れをつくる */}
           <div className="flex flex-col gap-5 md:translate-x-6">
-            <dl
+            <div
               data-anim="item"
-              className="grid grid-cols-[5rem_1fr] gap-x-4 gap-y-2 rounded-lg border-neon border-neon-green bg-cyber-black p-5 md:grid-cols-[6rem_1fr] md:gap-y-3"
+              className="overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black"
             >
-              {INFO.map((item) => (
-                <div key={item.label} className="contents">
-                  <dt className="text-sm font-bold text-neon-green md:text-base">
-                    {item.label}
-                  </dt>
-                  <dd className="break-all text-sm text-neon-white md:text-base">
-                    {item.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+              {/* エディタのタブに見立てたファイル名 */}
+              <div className="code-bar px-3 py-1.5 font-mono text-[0.65rem] text-neon-green md:px-4 md:text-xs">
+                profile.ts
+              </div>
+
+              <pre className="overflow-x-auto px-3 py-3 font-mono text-[0.68rem] leading-relaxed md:px-4 md:py-4 md:text-sm">
+                <ol>
+                  {lines.map((line, index) => (
+                    <li key={index} className="flex">
+                      {/* 行番号はコピーに混ざらないよう選択させない */}
+                      <span className="w-5 shrink-0 select-none pr-3 text-right text-neon-green opacity-25 md:w-6">
+                        {index + 1}
+                      </span>
+                      {line}
+                    </li>
+                  ))}
+                </ol>
+              </pre>
+            </div>
 
             <div
               data-anim="item"
