@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { RiUserStarFill } from "react-icons/ri";
 import fune from "../assets/fune.png";
 import { SectionHeading } from "./SectionHeading";
@@ -29,6 +29,20 @@ const HOBBIES = [
   "プログラミング",
 ];
 
+/**
+ * 配列を 1 行に並べる数。
+ * 全角の項目が多いので、狭い画面でも横に溢れない 2 つまでに抑える。
+ */
+const HOBBIES_PER_LINE = 2;
+
+const chunk = <T,>(items: readonly T[], size: number): T[][] => {
+  const rows: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    rows.push(items.slice(index, index + size));
+  }
+  return rows;
+};
+
 /*
  * 構文強調のトークン。
  * base の `*` が要素ごとに --neon-text-color を戻すので、
@@ -38,19 +52,30 @@ const Punct = ({ children }: { children: ReactNode }) => (
   <span className="text-neon-green opacity-40">{children}</span>
 );
 
+const Str = ({ children }: { children: ReactNode }) => (
+  <span className="text-neon-blue">&quot;{children}&quot;</span>
+);
+
+/** キーは幅を固定する。等幅なのでこれだけで値が縦に揃う */
+const Key = ({ name }: { name: string }) => (
+  <span className="inline-block min-w-[9ch]">
+    <span className="text-neon-green">{name}</span>
+    <Punct>:</Punct>
+  </span>
+);
+
 const Value = ({ value }: { value: string | number }) =>
   typeof value === "number" ? (
     <span className="text-neon-orange">{value}</span>
   ) : (
-    <span className="text-neon-blue">&quot;{value}&quot;</span>
+    <Str>{value}</Str>
   );
 
 /**
  * 自身の基本情報だけを扱うセクション。
  * 経歴はターミナルのログとして Prof セクションに分けている。
  *
- * 基本情報は TypeScript のオブジェクトリテラルの体裁で見せる。
- * 等幅なので、キーの幅を 9ch に固定するだけで値が縦に揃う。
+ * 基本情報も趣味も、profile.ts のオブジェクトリテラルとして読ませる。
  */
 export const About = () => {
   /*
@@ -65,16 +90,36 @@ export const About = () => {
       <Punct>:</Punct> <span className="text-neon-yellow">Profile</span>{" "}
       <Punct>= {"{"}</Punct>
     </span>,
+
     ...PROFILE.map((item) => (
       <span className="pl-[2ch]">
-        <span className="inline-block min-w-[9ch]">
-          <span className="text-neon-green">{item.key}</span>
-          <Punct>:</Punct>
-        </span>
+        <Key name={item.key} />
         <Value value={item.value} />
         <Punct>,</Punct>
       </span>
     )),
+
+    <span className="pl-[2ch]">
+      <Key name="hobbies" />
+      <Punct>[</Punct>
+    </span>,
+
+    ...chunk(HOBBIES, HOBBIES_PER_LINE).map((row) => (
+      <span className="pl-[4ch]">
+        {row.map((hobby, index) => (
+          <Fragment key={hobby}>
+            <Str>{hobby}</Str>
+            <Punct>,</Punct>
+            {index < row.length - 1 ? " " : null}
+          </Fragment>
+        ))}
+      </span>
+    )),
+
+    <span className="pl-[2ch]">
+      <Punct>],</Punct>
+    </span>,
+
     <Punct>{"};"}</Punct>,
   ];
 
@@ -104,8 +149,8 @@ export const About = () => {
             <p className="mt-1 text-sm text-neon-green md:text-base">Engineer</p>
           </div>
 
-          {/* 右：基本情報と趣味。1 段ずらして斜めの流れをつくる */}
-          <div className="flex flex-col gap-5 md:translate-x-6">
+          {/* 右：基本情報。1 段ずらして斜めの流れをつくる */}
+          <div className="md:translate-x-6">
             <div
               data-anim="item"
               className="overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black"
@@ -128,20 +173,6 @@ export const About = () => {
                   ))}
                 </ol>
               </pre>
-            </div>
-
-            <div
-              data-anim="item"
-              className="rounded-lg border-neon border-neon-green bg-cyber-black p-5"
-            >
-              <h3 className="text-lg font-bold text-neon-white md:text-xl">趣味</h3>
-              <ul className="badge-row mt-3 flex flex-wrap gap-2">
-                {HOBBIES.map((hobby) => (
-                  <li key={hobby} className="badge">
-                    {hobby}
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </div>
