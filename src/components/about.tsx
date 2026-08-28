@@ -3,11 +3,37 @@ import { RiUserStarFill } from "react-icons/ri";
 import fune from "../assets/fune.png";
 import { SectionHeading } from "./SectionHeading";
 
+type DocEntry = {
+  /** JSDoc のタグとして出す名前 */
+  tag: string;
+  /** タグの右に添える日本語の見出し */
+  label: string;
+  body: string;
+};
+
 type InfoEntry = {
   key: string;
   /** 数値はそのまま、文字列は "..." で囲んで出す */
   value: string | number;
 };
+
+const DOC: DocEntry[] = [
+  {
+    tag: "motivation",
+    label: "ものづくりへの原動力",
+    body: "頭の中にあるアイデアが、コードを通じて実際に動くプロダクトへと形を成していく過程そのものが好きです。何もない白紙の状態から、人々の生活や業務を支える仕組みを作り上げる創作の楽しさが、エンジニアとしてのモチベーションの源泉です。",
+  },
+  {
+    tag: "focus",
+    label: "得意な領域・関心のある分野",
+    body: "現在は特定の領域に絞り込まず、Web開発からAIツールの活用まで幅広く手を動かしながら自分のコアとなる強みを見定めている段階です。新しい技術に抵抗なく触れ、実際に動くものを作りながら領域を広げています。",
+  },
+  {
+    tag: "value",
+    label: "開発理念",
+    body: "『シンプルに作って、シンプルに解決する』がモットー。無駄に複雑にせず、一番スマートな方法で課題をクリアします。",
+  },
+];
 
 const PROFILE: InfoEntry[] = [
   { key: "name", value: "Riku Funagayama" },
@@ -72,10 +98,22 @@ const Value = ({ value }: { value: string | number }) =>
   );
 
 /**
+ * コメント行。行頭の ` * ` を独立した flex item にしておくと、
+ * 本文が折り返しても字下げが揃う（エディタの折り返しと同じ見え方）。
+ */
+const CommentLine = ({ children }: { children: ReactNode }) => (
+  <span className="flex min-w-0">
+    <span className="shrink-0 text-neon-green opacity-40">{" * "}</span>
+    {children}
+  </span>
+);
+
+/**
  * 自身の基本情報だけを扱うセクション。
  * 経歴はターミナルのログとして Prof セクションに分けている。
  *
- * 基本情報も趣味も、profile.ts のオブジェクトリテラルとして読ませる。
+ * 中身は profile.ts の 1 ファイルとして読ませる。
+ * 散文は JSDoc コメント、事実の列挙はオブジェクトリテラルに置いている。
  */
 export const About = () => {
   /*
@@ -84,6 +122,28 @@ export const About = () => {
    * 間の空白が落ちて詰まって表示されてしまう。
    */
   const lines: ReactNode[] = [
+    <Punct>/**</Punct>,
+
+    ...DOC.flatMap((item, index) => [
+      // 段落と段落のあいだの ` *`
+      ...(index > 0 ? [<Punct>{" *"}</Punct>] : []),
+
+      <CommentLine>
+        <span className="shrink-0 text-neon-yellow">@{item.tag}</span>
+        <span className="min-w-0 whitespace-normal pl-3 text-neon-green">
+          {item.label}
+        </span>
+      </CommentLine>,
+
+      <CommentLine>
+        <span className="min-w-0 flex-1 whitespace-normal text-neon-white">
+          {item.body}
+        </span>
+      </CommentLine>,
+    ]),
+
+    <Punct>{" */"}</Punct>,
+
     <span>
       <span className="text-neon-pink">const</span>{" "}
       <span className="text-neon-white">profile</span>
@@ -149,7 +209,7 @@ export const About = () => {
             <p className="mt-1 text-sm text-neon-green md:text-base">Engineer</p>
           </div>
 
-          {/* 右：基本情報。1 段ずらして斜めの流れをつくる */}
+          {/* 右：profile.ts。1 段ずらして斜めの流れをつくる */}
           <div className="md:translate-x-6">
             <div
               data-anim="item"
@@ -160,7 +220,16 @@ export const About = () => {
                 profile.ts
               </div>
 
-              <pre className="overflow-x-auto px-3 py-3 font-mono text-[0.68rem] leading-relaxed md:px-4 md:py-4 md:text-sm">
+              {/*
+                広い画面はセクションの高さが 1 画面ぶんに固定されるので、
+                入り切らないぶんはこの中でスクロールさせる。
+                data-scrollable を付けておくと、斜め展開モードでも
+                読み切るまでスクロールを横取りされない。
+              */}
+              <pre
+                data-scrollable
+                className="overflow-auto px-3 py-3 font-mono text-[0.68rem] leading-relaxed md:max-h-[calc(100dvh-11rem)] md:px-4 md:py-4 md:text-sm md:leading-normal"
+              >
                 <ol>
                   {lines.map((line, index) => (
                     <li key={index} className="flex">
