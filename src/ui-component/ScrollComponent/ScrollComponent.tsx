@@ -19,7 +19,12 @@ const ScrollComponent: FC<ScrollComponentProps> = ({ onBackToTop, atTop }) => {
       type="button"
       onClick={onBackToTop}
       aria-label="Back to top"
-      className={`fixed left-2 top-2 z-50 h-10 w-10 rounded-full border-neon border-neon-green transition duration-300 ease-in-out hover:scale-105 hover:opacity-60 md:left-7 md:top-7 md:h-16 md:w-16 ${
+      /*
+       * 画面上部はヘッダー（時計とセクション導線）に譲って下へ下ろす。
+       * 左下ではなく右下なのは、Projects のグリッドが左下までカードで
+       * 埋まっていて重なるため。右下は最終行が余るので空いている。
+       */
+      className={`fixed bottom-4 right-3 z-50 h-10 w-10 rounded-full border-neon border-neon-green transition duration-300 ease-in-out hover:scale-105 hover:opacity-60 md:bottom-7 md:right-7 md:h-16 md:w-16 ${
         atTop ? "opacity-40" : ""
       }`}
     >

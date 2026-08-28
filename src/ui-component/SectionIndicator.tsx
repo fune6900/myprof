@@ -26,9 +26,14 @@ export const SectionIndicator = ({ sections, navigator }: SectionIndicatorProps)
 
   return (
     <>
+      {/*
+        min-h-1 と p-0 も要る。プラグインの .progress は min-height: 16px と
+        padding: 4px を持っていて、h-1 だけでは 16px のまま残り、
+        ヘッダーの時計や戻るボタンに被ってしまう。
+      */}
       <div
         ref={bar}
-        className="progress fixed inset-x-0 top-0 z-50 h-1 origin-left"
+        className="progress fixed inset-x-0 top-0 z-50 h-1 min-h-1 origin-left p-0"
         style={{ transform: 'scaleX(0)' }}
       />
 

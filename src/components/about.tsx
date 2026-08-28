@@ -1,18 +1,48 @@
+import { Fragment, type ReactNode } from "react";
 import { RiUserStarFill } from "react-icons/ri";
 import fune from "../assets/fune.png";
 import { SectionHeading } from "./SectionHeading";
 
-type InfoEntry = {
+type DocEntry = {
+  /** JSDoc のタグとして出す名前 */
+  tag: string;
+  /** タグの右に添える日本語の見出し */
   label: string;
-  value: string;
+  body: string;
 };
 
-const INFO: InfoEntry[] = [
-  { label: "名前", value: "Riku Funagayama" },
-  { label: "生年", value: "2003年" },
-  { label: "出身", value: "宮崎県" },
-  { label: "拠点", value: "東京都（都内でエンジニアとして活動中）" },
-  { label: "連絡先", value: "riku.riku1019@icloud.com" },
+type InfoEntry = {
+  key: string;
+  /** 数値はそのまま、文字列は "..." で囲んで出す */
+  value: string | number;
+};
+
+const DOC: DocEntry[] = [
+  {
+    tag: "motivation",
+    label: "ものづくりへの原動力",
+    body: "頭の中にあるアイデアが、コードを通じて実際に動くプロダクトへと形を成していく過程そのものが好きです。何もない白紙の状態から、人々の生活や業務を支える仕組みを作り上げる創作の楽しさが、エンジニアとしてのモチベーションの源泉です。",
+  },
+  {
+    tag: "focus",
+    label: "得意な領域・関心のある分野",
+    body: "現在は特定の領域に絞り込まず、Web開発からAIツールの活用まで幅広く手を動かしながら自分のコアとなる強みを見定めている段階です。新しい技術に抵抗なく触れ、実際に動くものを作りながら領域を広げています。",
+  },
+  {
+    tag: "value",
+    label: "開発理念",
+    body: "『シンプルに作って、シンプルに解決する』がモットー。無駄に複雑にせず、一番スマートな方法で課題をクリアします。",
+  },
+];
+
+const PROFILE: InfoEntry[] = [
+  { key: "name", value: "Riku Funagayama" },
+  { key: "born", value: 2003 },
+  { key: "from", value: "宮崎県" },
+  { key: "based", value: "東京都" },
+  { key: "role", value: "System Engineer" },
+  { key: "status", value: "都内でエンジニアとして活動中" },
+  { key: "contact", value: "riku.riku1019@icloud.com" },
 ];
 
 const HOBBIES = [
@@ -20,16 +50,140 @@ const HOBBIES = [
   "レコード集め",
   "ガジェット",
   "インテリア",
+  "観葉植物",
   "ゲーム",
   "アニメ",
   "プログラミング",
 ];
 
 /**
+ * 配列を 1 行に並べる数。
+ * 全角の項目が多いので、狭い画面でも横に溢れない 2 つまでに抑える。
+ */
+const HOBBIES_PER_LINE = 2;
+
+const chunk = <T,>(items: readonly T[], size: number): T[][] => {
+  const rows: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    rows.push(items.slice(index, index + size));
+  }
+  return rows;
+};
+
+/*
+ * 構文強調のトークン。
+ * base の `*` が要素ごとに --neon-text-color を戻すので、
+ * 色は入れ子で継がせず span ひとつずつに持たせる。
+ */
+const Punct = ({ children }: { children: ReactNode }) => (
+  <span className="text-neon-green opacity-40">{children}</span>
+);
+
+const Str = ({ children }: { children: ReactNode }) => (
+  <span className="text-neon-blue">&quot;{children}&quot;</span>
+);
+
+/** キーは幅を固定する。等幅なのでこれだけで値が縦に揃う */
+const Key = ({ name }: { name: string }) => (
+  <span className="inline-block min-w-[9ch]">
+    <span className="text-neon-green">{name}</span>
+    <Punct>:</Punct>
+  </span>
+);
+
+const Value = ({ value }: { value: string | number }) =>
+  typeof value === "number" ? (
+    <span className="text-neon-orange">{value}</span>
+  ) : (
+    <Str>{value}</Str>
+  );
+
+/**
+ * コメント行。行頭の ` * ` を独立した flex item にしておくと、
+ * 本文が折り返しても字下げが揃う（エディタの折り返しと同じ見え方）。
+ */
+const CommentLine = ({ children }: { children: ReactNode }) => (
+  <span className="flex min-w-0">
+    <span className="shrink-0 text-neon-green opacity-40">{" * "}</span>
+    {children}
+  </span>
+);
+
+/**
  * 自身の基本情報だけを扱うセクション。
  * 経歴はターミナルのログとして Prof セクションに分けている。
+ *
+ * 中身は profile.ts の 1 ファイルとして読ませる。
+ * 散文は JSDoc コメント、事実の列挙はオブジェクトリテラルに置いている。
  */
 export const About = () => {
+  /*
+   * 行は flex（行番号 + 中身）なので、中身は必ず span 1 つにまとめる。
+   * 直下にトークンを並べるとトークン同士が別々の flex item になり、
+   * 間の空白が落ちて詰まって表示されてしまう。
+   */
+  const lines: ReactNode[] = [
+    <Punct>/**</Punct>,
+
+    ...DOC.flatMap((item, index) => [
+      // 段落と段落のあいだの ` *`
+      ...(index > 0 ? [<Punct>{" *"}</Punct>] : []),
+
+      <CommentLine>
+        <span className="shrink-0 text-neon-yellow">@{item.tag}</span>
+        <span className="min-w-0 whitespace-normal pl-3 text-neon-green">
+          {item.label}
+        </span>
+      </CommentLine>,
+
+      <CommentLine>
+        <span className="min-w-0 flex-1 whitespace-normal text-neon-white">
+          {item.body}
+        </span>
+      </CommentLine>,
+    ]),
+
+    <Punct>{" */"}</Punct>,
+
+    <span>
+      <span className="text-neon-pink">const</span>{" "}
+      <span className="text-neon-white">profile</span>
+      <Punct>:</Punct> <span className="text-neon-yellow">Profile</span>{" "}
+      <Punct>= {"{"}</Punct>
+    </span>,
+
+    ...PROFILE.map((item) => (
+      <span className="pl-[2ch]">
+        <Key name={item.key} />
+        <Value value={item.value} />
+        <Punct>,</Punct>
+      </span>
+    )),
+
+    <span className="pl-[2ch]">
+      <Key name="hobbies" />
+      <Punct>[</Punct>
+    </span>,
+
+    ...chunk(HOBBIES, HOBBIES_PER_LINE).map((row) => (
+      <span className="pl-[4ch]">
+        {row.map((hobby, index) => (
+          <Fragment key={hobby}>
+            <Str>{hobby}</Str>
+            <Punct>,</Punct>
+            {index < row.length - 1 ? " " : null}
+          </Fragment>
+        ))}
+      </span>
+    )),
+
+    <span className="pl-[2ch]">
+      <Punct>],</Punct>
+    </span>,
+
+    <Punct>{"};"}</Punct>,
+  ];
+
   return (
     <section
       id="about"
@@ -53,39 +207,45 @@ export const About = () => {
             <h3 className="mt-4 text-xl font-bold text-neon-white md:text-2xl">
               Riku Funagayama
             </h3>
-            <p className="mt-1 text-sm text-neon-green md:text-base">Engineer</p>
+            {/* profile.ts の role と同じ内容。片方だけ変えないこと */}
+            <p className="mt-1 text-sm text-neon-green md:text-base">
+              System Engineer
+            </p>
           </div>
 
-          {/* 右：基本情報と趣味。1 段ずらして斜めの流れをつくる */}
-          <div className="flex flex-col gap-5 md:translate-x-6">
-            <dl
-              data-anim="item"
-              className="grid grid-cols-[5rem_1fr] gap-x-4 gap-y-2 rounded-lg border-neon border-neon-green bg-cyber-black p-5 md:grid-cols-[6rem_1fr] md:gap-y-3"
-            >
-              {INFO.map((item) => (
-                <div key={item.label} className="contents">
-                  <dt className="text-sm font-bold text-neon-green md:text-base">
-                    {item.label}
-                  </dt>
-                  <dd className="break-all text-sm text-neon-white md:text-base">
-                    {item.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-
+          {/* 右：profile.ts。1 段ずらして斜めの流れをつくる */}
+          <div className="md:translate-x-6">
             <div
               data-anim="item"
-              className="rounded-lg border-neon border-neon-green bg-cyber-black p-5"
+              className="overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black"
             >
-              <h3 className="text-lg font-bold text-neon-white md:text-xl">趣味</h3>
-              <ul className="badge-row mt-3 flex flex-wrap gap-2">
-                {HOBBIES.map((hobby) => (
-                  <li key={hobby} className="badge">
-                    {hobby}
-                  </li>
-                ))}
-              </ul>
+              {/* エディタのタブに見立てたファイル名 */}
+              <div className="code-bar px-3 py-1.5 font-mono text-[0.65rem] text-neon-green md:px-4 md:text-xs">
+                profile.ts
+              </div>
+
+              {/*
+                広い画面はセクションの高さが 1 画面ぶんに固定されるので、
+                入り切らないぶんはこの中でスクロールさせる。
+                data-scrollable を付けておくと、斜め展開モードでも
+                読み切るまでスクロールを横取りされない。
+              */}
+              <pre
+                data-scrollable
+                className="overflow-auto px-3 py-3 font-mono text-[0.68rem] leading-relaxed md:max-h-[calc(100dvh-11rem)] md:px-4 md:py-4 md:text-sm md:leading-normal"
+              >
+                <ol>
+                  {lines.map((line, index) => (
+                    <li key={index} className="flex">
+                      {/* 行番号はコピーに混ざらないよう選択させない */}
+                      <span className="w-5 shrink-0 select-none pr-3 text-right text-neon-green opacity-25 md:w-6">
+                        {index + 1}
+                      </span>
+                      {line}
+                    </li>
+                  ))}
+                </ol>
+              </pre>
             </div>
           </div>
         </div>

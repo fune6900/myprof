@@ -53,7 +53,7 @@ export const SiteHeader = ({ sections, navigator }: SiteHeaderProps) => {
 
   return (
     // 帯そのものはクリックを拾わない。中身だけが操作対象
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-start justify-between gap-4 py-3 pl-14 pr-3 md:py-6 md:pl-40 md:pr-8">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-start justify-between gap-4 px-3 py-3 md:px-8 md:py-6">
       <div className="pointer-events-auto">
         <Clock />
       </div>
