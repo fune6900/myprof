@@ -40,7 +40,7 @@ const PROFILE: InfoEntry[] = [
   { key: "born", value: 2003 },
   { key: "from", value: "宮崎県" },
   { key: "based", value: "東京都" },
-  { key: "role", value: "Engineer" },
+  { key: "role", value: "System Engineer" },
   { key: "status", value: "都内でエンジニアとして活動中" },
   { key: "contact", value: "riku.riku1019@icloud.com" },
 ];
@@ -50,6 +50,7 @@ const HOBBIES = [
   "レコード集め",
   "ガジェット",
   "インテリア",
+  "観葉植物",
   "ゲーム",
   "アニメ",
   "プログラミング",
@@ -206,7 +207,10 @@ export const About = () => {
             <h3 className="mt-4 text-xl font-bold text-neon-white md:text-2xl">
               Riku Funagayama
             </h3>
-            <p className="mt-1 text-sm text-neon-green md:text-base">Engineer</p>
+            {/* profile.ts の role と同じ内容。片方だけ変えないこと */}
+            <p className="mt-1 text-sm text-neon-green md:text-base">
+              System Engineer
+            </p>
           </div>
 
           {/* 右：profile.ts。1 段ずらして斜めの流れをつくる */}
