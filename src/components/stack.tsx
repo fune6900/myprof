@@ -86,14 +86,14 @@ const GROUPS: StackGroup[] = [
 ];
 
 /** 傾きの上限 (deg) */
-const MAX_TILT = 17;
+const MAX_TILT = 20;
 /** 影をずらす量の上限 (px) */
 const MAX_SHADOW = 26;
 
 /** 静止時の角度。左右の列で内側を向かせて、置かれている感じを出す */
 const restingAngles = (column: number) => ({
-  rx: 7,
-  ry: column === 0 ? 13 : -13,
+  rx: 9,
+  ry: column === 0 ? 18 : -18,
 });
 
 type GroupProps = StackGroup & { column: number };
@@ -158,6 +158,13 @@ const Group = ({ index, title, items, column }: GroupProps) => {
         }
         className="stack-card rounded-lg border-neon border-neon-green bg-cyber-black p-3"
       >
+        {/* 箱の面。手前の面はこの div 自身で、残りをここで補う */}
+        <span aria-hidden="true" className="stack-face stack-face-back" />
+        <span aria-hidden="true" className="stack-face stack-face-left" />
+        <span aria-hidden="true" className="stack-face stack-face-right" />
+        <span aria-hidden="true" className="stack-face stack-face-top" />
+        <span aria-hidden="true" className="stack-face stack-face-bottom" />
+
         {/* 傾きに合わせて動く光沢 */}
         <span aria-hidden="true" className="stack-card-sheen" />
 

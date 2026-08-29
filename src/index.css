@@ -261,7 +261,7 @@
  * 傾けたときに 3 枚の面がずれて見えることで厚みを出している。
  */
 .stack-scene {
-  perspective: 620px;
+  perspective: 520px;
   perspective-origin: 50% 40%;
 }
 
@@ -272,8 +272,8 @@
 .stack-card {
   position: relative;
   transform-style: preserve-3d;
-  transform: rotateX(var(--rx, var(--rest-rx, 7deg)))
-    rotateY(var(--ry, var(--rest-ry, -12deg)))
+  transform: rotateX(var(--rx, var(--rest-rx, 9deg)))
+    rotateY(var(--ry, var(--rest-ry, -18deg)))
     translateZ(var(--lift, 12px));
   /* 傾けた向きと逆に影を落とすと、浮いているように見える */
   box-shadow: calc(var(--sx, 8px) * -1) calc(var(--sy, -6px) * -1 + 14px)
@@ -289,28 +289,74 @@
 }
 
 /*
- * 厚みの面。奥へ 2 段ずらして置く。
- * 枠線を主にして、手前の面の発光を濁らせないようにしている。
+ * 厚みは板を重ねるのではなく、実際に側面・上面・下面を生成して箱にする。
+ * 各面は縁に置いた帯を 90 度倒したもの。カードの幅や高さを JS で
+ * 測らなくても、% 指定と transform-origin だけで組める。
  */
-.stack-card::before,
-.stack-card::after {
-  content: "";
+.stack-card {
+  --depth: 46px;
+}
+
+.stack-face {
   position: absolute;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--neon-green) 30%, transparent);
+  background: linear-gradient(
+    var(--face-angle, 180deg),
+    color-mix(in srgb, var(--neon-green) 14%, var(--cyber-black)),
+    var(--cyber-black)
+  );
+}
+
+/* 背面 */
+.stack-face-back {
   inset: 0;
   border-radius: inherit;
-  pointer-events: none;
+  transform: translateZ(calc(var(--depth) * -1));
 }
 
-.stack-card::before {
-  border: 1px solid color-mix(in srgb, var(--neon-green) 55%, transparent);
-  background: color-mix(in srgb, var(--cyber-black) 88%, var(--neon-green));
-  transform: translateZ(-24px);
+/* 右の側面。右端から外へ出した帯を奥へ倒す */
+.stack-face-right {
+  top: 0;
+  left: 100%;
+  height: 100%;
+  width: var(--depth);
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  --face-angle: 90deg;
 }
 
-.stack-card::after {
-  border: 1px solid color-mix(in srgb, var(--neon-green) 28%, transparent);
-  background: var(--cyber-black);
-  transform: translateZ(-48px);
+/* 左の側面 */
+.stack-face-left {
+  top: 0;
+  right: 100%;
+  height: 100%;
+  width: var(--depth);
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  --face-angle: 270deg;
+}
+
+/* 上面 */
+.stack-face-top {
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  height: var(--depth);
+  transform-origin: center bottom;
+  transform: rotateX(90deg);
+  --face-angle: 0deg;
+}
+
+/* 下面 */
+.stack-face-bottom {
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: var(--depth);
+  transform-origin: center top;
+  transform: rotateX(-90deg);
+  --face-angle: 180deg;
 }
 
 /* 中身をさらに手前へ。傾けたとき面から浮いて見える */
