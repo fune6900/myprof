@@ -12,11 +12,21 @@ import { useMediaQuery } from './hooks/useMediaQuery';
 import { Helo } from './components/helo';
 import { About } from './components/about';
 import { Prof } from './components/prof';
-import { Skill } from './components/skill';
+import { Stack } from './components/stack';
 import { Projects } from './components/projects';
+import { Blog } from './components/blog';
+import { Contact } from './components/contact';
 
 /** hash とアンカーリンクの対象。並び順がそのまま画面の並び順になる */
-const SECTION_IDS = ['hero', 'about', 'profile', 'skills', 'projects'] as const;
+const SECTION_IDS = [
+  'hero',
+  'about',
+  'profile',
+  'stack',
+  'projects',
+  'blog',
+  'contact',
+] as const;
 
 /**
  * 斜め展開に切り替える下限。
@@ -35,8 +45,10 @@ function App() {
       { id: 'hero', label: 'Home', content: <Helo onAdvance={() => goTo(1)} /> },
       { id: 'about', label: 'About', content: <About /> },
       { id: 'profile', label: 'Profile', content: <Prof /> },
-      { id: 'skills', label: 'Skills', content: <Skill /> },
+      { id: 'stack', label: 'Stack', content: <Stack /> },
       { id: 'projects', label: 'Projects', content: <Projects /> },
+      { id: 'blog', label: 'Blog', content: <Blog /> },
+      { id: 'contact', label: 'Contact', content: <Contact /> },
     ],
     [goTo],
   );

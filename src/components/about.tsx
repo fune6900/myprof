@@ -214,7 +214,7 @@ export const About = () => {
       ref={root}
       id="about"
       aria-labelledby="about-heading"
-      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:py-10"
+      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:pb-10 md:pt-24"
     >
       <SectionHeading id="about-heading" title="About" icon={RiUserStarFill} />
 
@@ -284,7 +284,7 @@ export const About = () => {
           {/* 3. 枠なしの生コード */}
           <pre
             ref={code}
-            className="mt-12 whitespace-pre-wrap font-mono text-sm leading-loose md:mt-16 md:text-base lg:text-lg"
+            className="mt-12 min-w-0 [overflow-wrap:anywhere] whitespace-pre-wrap font-mono text-sm leading-loose md:mt-16 md:text-base lg:text-lg"
           >
             {mode === "ts" ? (
               <span data-line data-reveal="line" className="block">

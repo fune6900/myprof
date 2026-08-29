@@ -14,6 +14,16 @@
   }
 }
 
+/*
+ * 横には決してスクロールさせない。
+ * マーキーの帯や Stack カードの側面など、装飾は意図的に枠の外へ出る作りなので、
+ * それが横スクロールにならないようここで止めておく。
+ */
+html,
+body {
+  overflow-x: hidden;
+}
+
 
 /*
  * neo-metro-city は text-neon-white を定義していないため、
@@ -250,6 +260,185 @@
 [data-scrollable]:focus-visible {
   outline: 2px solid var(--neon-green);
   outline-offset: -2px;
+}
+
+/*
+ * Stack の分類カードを立体にする。
+ * WebGL は使わない。中身が文字とアイコンなので、CSS の 3D 変形で
+ * 奥行きを付けるほうが読みやすく、依存も増えない。
+ *
+ * 手前から順に「中身」「表の面」「厚みの面 2 枚」を重ね、
+ * 傾けたときに 3 枚の面がずれて見えることで厚みを出している。
+ */
+.stack-scene {
+  perspective: 520px;
+  perspective-origin: 50% 40%;
+}
+
+/*
+ * 静止状態から傾けておく。真正面を向いていると厚みの面が真後ろに隠れて
+ * 平らな板に見えてしまうため、最初から角度を付けて厚みを見せる。
+ */
+.stack-card {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, var(--rest-rx, 9deg)))
+    rotateY(var(--ry, var(--rest-ry, -18deg)))
+    translateZ(var(--lift, 12px));
+  /* 傾けた向きと逆に影を落とすと、浮いているように見える */
+  box-shadow: calc(var(--sx, 8px) * -1) calc(var(--sy, -6px) * -1 + 14px)
+    34px rgba(0, 0, 0, 0.6);
+  /* 離れたときはゆっくり戻し、追従中は素早く付いてくる */
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stack-card[data-tilting="true"] {
+  transition-duration: 0.08s;
+}
+
+/*
+ * 厚みは板を重ねるのではなく、実際に側面・上面・下面を生成して箱にする。
+ * 各面は縁に置いた帯を 90 度倒したもの。カードの幅や高さを JS で
+ * 測らなくても、% 指定と transform-origin だけで組める。
+ */
+.stack-card {
+  --depth: 46px;
+}
+
+.stack-face {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--neon-green) 30%, transparent);
+  background: linear-gradient(
+    var(--face-angle, 180deg),
+    color-mix(in srgb, var(--neon-green) 14%, var(--cyber-black)),
+    var(--cyber-black)
+  );
+}
+
+/* 背面 */
+.stack-face-back {
+  inset: 0;
+  border-radius: inherit;
+  transform: translateZ(calc(var(--depth) * -1));
+}
+
+/* 右の側面。右端から外へ出した帯を奥へ倒す */
+.stack-face-right {
+  top: 0;
+  left: 100%;
+  height: 100%;
+  width: var(--depth);
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  --face-angle: 90deg;
+}
+
+/* 左の側面 */
+.stack-face-left {
+  top: 0;
+  right: 100%;
+  height: 100%;
+  width: var(--depth);
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  --face-angle: 270deg;
+}
+
+/* 上面 */
+.stack-face-top {
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  height: var(--depth);
+  transform-origin: center bottom;
+  transform: rotateX(90deg);
+  --face-angle: 0deg;
+}
+
+/* 下面 */
+.stack-face-bottom {
+  top: 100%;
+  left: 0;
+  width: 100%;
+  height: var(--depth);
+  transform-origin: center top;
+  transform: rotateX(-90deg);
+  --face-angle: 180deg;
+}
+
+/* 中身をさらに手前へ。傾けたとき面から浮いて見える */
+.stack-card-lift {
+  transform: translateZ(34px);
+  transform-style: preserve-3d;
+}
+
+/*
+ * ごくゆっくり漂わせる。止まっていると絵に見えるので、
+ * わずかに動かして「空間に置かれた物」だと伝える。
+ * カード本体とは別の層に掛けて、傾きの transform とぶつからないようにする。
+ */
+.stack-float {
+  animation: stack-float 9s ease-in-out infinite alternate;
+}
+
+.stack-float:nth-child(even) {
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+
+@keyframes stack-float {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-float {
+    animation: none;
+  }
+}
+
+/* 傾きに合わせて動く光沢。面が向きを変えている感じを補強する */
+.stack-card-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    18rem circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--neon-green) 16%, transparent),
+    transparent 65%
+  );
+}
+
+.stack-card[data-tilting="true"] .stack-card-sheen {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-card,
+  .stack-card[data-tilting="true"] {
+    transform: none;
+    transition: none;
+    box-shadow: none;
+  }
+
+
+  .stack-card-lift {
+    transform: none;
+  }
+
+  .stack-card-sheen {
+    display: none;
+  }
 }
 
 .dotgothic16 {
