@@ -192,13 +192,23 @@ export const Stack = () => {
     <section
       id="stack"
       aria-labelledby="stack-heading"
-      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:py-10"
+      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:pb-10 md:pt-24"
     >
       <SectionHeading id="stack-heading" title="Stack" icon={FaCode} />
 
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        {/* 4 グループ。広い画面は 2 列に組み、1 列ずつ下げて斜めの流れをつくる */}
-        <div className="stack-scene grid w-full max-w-5xl gap-4 lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6">
+      {/*
+        収まるときは中央寄せ、溢れるときはこの中でスクロールさせる。
+        スクロール枠を flex にして my-auto で中央寄せすると、溢れたときに
+        上端がマイナス側へ回り込んで届かなくなるので、枠は素の block にし、
+        内側で min-h-full + items-center を使っている。
+      */}
+      <div
+        data-scrollable
+        className="mt-3 min-h-0 flex-1 md:overflow-y-auto"
+      >
+        <div className="flex min-h-full items-center justify-center">
+          {/* 4 グループ。広い画面は 2 列に組み、1 列ずつ下げて斜めの流れをつくる */}
+          <div className="stack-scene grid w-full max-w-5xl gap-4 px-1 py-1 lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6">
           {GROUPS.map((group, i) => (
             <div
               key={group.title}
@@ -209,6 +219,7 @@ export const Stack = () => {
               <Group {...group} column={i % 2} />
             </div>
           ))}
+          </div>
         </div>
       </div>
     </section>

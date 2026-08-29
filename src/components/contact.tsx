@@ -53,7 +53,7 @@ export const Contact = () => {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:py-10"
+      className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:pb-10 md:pt-24"
     >
       <SectionHeading id="contact-heading" title="Contact" icon={FaPaperPlane} />
 

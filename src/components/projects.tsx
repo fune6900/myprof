@@ -80,7 +80,7 @@ export const Projects = () => {
       id="projects"
       aria-labelledby="projects-heading"
       data-anim-from="top-right"
-      className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 pb-6 pt-20 md:h-full md:min-h-0 md:px-10 md:py-8"
+      className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 pb-6 pt-20 md:h-full md:min-h-0 md:px-10 md:pb-8 md:pt-24"
     >
       {/*
         ホバー中の作品を背景に大きく流す。
@@ -122,15 +122,17 @@ export const Projects = () => {
       <SectionHeading id="projects-heading" title="Projects" icon={FaRocket} />
 
       {/*
-        行数を固定したグリッド。1 行の高さが画面から決まるので、
-        画面が低くても見出しへせり上がって重なることがない。
+        画面が低いとカードの最低限の高さが行の高さを超え、見出しへ
+        せり上がって重なっていた。溢れる場合はこの中でスクロールさせる。
+        data-scrollable を付けてあるので、斜め展開モードでも読み切るまで
+        スクロールを横取りされない。
       */}
-      {/*
-        狭い画面は 1 列。ページ全体が普通にスクロールするので、
-        ここで内側にスクロール領域を作る必要はない。
-        md 以上は 1 画面に収まる固定グリッド。
-      */}
-      <ul className="relative mt-5 flex flex-col gap-6 md:mt-7 md:grid md:min-h-0 md:flex-1 md:grid-cols-2 md:grid-rows-3 md:gap-7 lg:grid-cols-3 lg:grid-rows-2 lg:gap-8">
+      <div
+        data-scrollable
+        className="relative mt-5 min-h-0 flex-1 md:mt-7 md:overflow-y-auto"
+      >
+        <div className="flex min-h-full items-center">
+          <ul className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:gap-7 lg:grid-cols-3 lg:gap-8">
         {PROJECTS.map((item) => (
           <li
             key={item.title}
@@ -206,9 +208,11 @@ export const Projects = () => {
             >
               <FaGithub className="text-base md:text-xl" />
             </a>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+          </ul>
+        </div>
+      </div>
 
       <p className="shrink-0 pt-3 text-center text-[0.65rem] text-neon-white md:pt-4 md:text-xs">
         © Riku Funagayama, All Rights Reserved.

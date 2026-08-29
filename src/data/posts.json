@@ -5,6 +5,7 @@
     "url": "https://qiita.com/fune_6900/items/fd2085bc135dd7b09cfe",
     "publishedAt": "2025-06-20",
     "likes": 9,
+    "image": null,
     "tags": [
       "Ruby",
       "Rails",
@@ -17,6 +18,7 @@
     "url": "https://note.com/fune_6900/n/nb34085e7acf3",
     "publishedAt": "2025-06-18",
     "likes": 16,
+    "image": "https://assets.st-note.com/production/uploads/images/196766188/rectangle_large_type_2_4284effed89beec6838bd2efae9807e0.png?fit=bounds&quality=85&width=1280",
     "tags": [
       "#転職",
       "#ITエンジニア",
@@ -29,6 +31,7 @@
     "url": "https://note.com/fune_6900/n/n46c10e00a94d",
     "publishedAt": "2025-01-25",
     "likes": 5,
+    "image": "https://assets.st-note.com/production/uploads/images/171558151/rectangle_large_type_2_2d17e1b9bcb52a8a562ebc11e114fea9.png?fit=bounds&quality=85&width=1280",
     "tags": [
       "#アプリ開発",
       "#エンジニア転職",
@@ -41,6 +44,7 @@
     "url": "https://qiita.com/fune_6900/items/0419edac1c5dced7fa3c",
     "publishedAt": "2024-12-16",
     "likes": 12,
+    "image": null,
     "tags": [
       "Ruby",
       "Gem",
@@ -53,6 +57,7 @@
     "url": "https://note.com/fune_6900/n/n85623fa1d76b",
     "publishedAt": "2024-12-09",
     "likes": 6,
+    "image": "https://assets.st-note.com/production/uploads/images/165079980/rectangle_large_type_2_096a6f74bc9d00ae1b878fab21a1012b.png?fit=bounds&quality=85&width=1280",
     "tags": [
       "#プログラミング学習",
       "#エンジニア転職",
@@ -65,6 +70,7 @@
     "url": "https://qiita.com/fune_6900/items/546211ff7df77fe17fb7",
     "publishedAt": "2024-11-10",
     "likes": 4,
+    "image": null,
     "tags": [
       "Ruby",
       "環境構築",
@@ -77,6 +83,7 @@
     "url": "https://note.com/fune_6900/n/n2f0f6a5bd95c",
     "publishedAt": "2024-11-04",
     "likes": 11,
+    "image": "https://assets.st-note.com/production/uploads/images/160575028/rectangle_large_type_2_72e8900148ec3dc9319f7ef86d99f1c4.png?fit=bounds&quality=85&width=1280",
     "tags": [
       "#プログラミング学習",
       "#エンジニア転職",
@@ -89,6 +96,7 @@
     "url": "https://note.com/fune_6900/n/n222e44ef7a01",
     "publishedAt": "2024-10-05",
     "likes": 5,
+    "image": "https://assets.st-note.com/production/uploads/images/156778893/rectangle_large_type_2_45a8d8962f80479b3915a716370399bb.png?fit=bounds&quality=85&width=1280",
     "tags": [
       "#プログラミング学習",
       "#エンジニア転職",
@@ -101,10 +109,23 @@
     "url": "https://note.com/fune_6900/n/n3123af682ad6",
     "publishedAt": "2024-09-10",
     "likes": 8,
+    "image": "https://assets.st-note.com/production/uploads/images/153836243/rectangle_large_type_2_c7336b8abebf1b060f30d8bf61d7e427.png?fit=bounds&quality=85&width=1280",
     "tags": [
       "#エンジニア",
       "#プログラミング",
       "#学習"
+    ]
+  },
+  {
+    "source": "note",
+    "title": "自己紹介",
+    "url": "https://note.com/fune_6900/n/n85b23276aa1e",
+    "publishedAt": "2024-07-24",
+    "likes": 38,
+    "image": "https://assets.st-note.com/production/uploads/images/148086169/rectangle_large_type_2_bab20da5b90968b2378a27e67693b4f8.png?fit=bounds&quality=85&width=1280",
+    "tags": [
+      "#自己紹介",
+      "#RUNTEQ"
     ]
   }
 ]
