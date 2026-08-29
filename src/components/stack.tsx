@@ -90,8 +90,17 @@ const MAX_TILT = 17;
 /** 影をずらす量の上限 (px) */
 const MAX_SHADOW = 26;
 
-const Group = ({ index, title, items }: StackGroup) => {
+/** 静止時の角度。左右の列で内側を向かせて、置かれている感じを出す */
+const restingAngles = (column: number) => ({
+  rx: 7,
+  ry: column === 0 ? 13 : -13,
+});
+
+type GroupProps = StackGroup & { column: number };
+
+const Group = ({ index, title, items, column }: GroupProps) => {
   const card = useRef<HTMLDivElement>(null);
+  const rest0 = restingAngles(column);
 
   /** カード上のカーソル位置を傾きに変える。中心が 0、端で最大 */
   const tilt = (event: PointerEvent<HTMLDivElement>) => {
@@ -119,11 +128,12 @@ const Group = ({ index, title, items }: StackGroup) => {
     const el = card.current;
     if (!el) return;
     el.dataset.tilting = "false";
-    el.style.setProperty("--rx", "0deg");
-    el.style.setProperty("--ry", "0deg");
-    el.style.setProperty("--lift", "0px");
-    el.style.setProperty("--sx", "0px");
-    el.style.setProperty("--sy", "0px");
+    // 真正面には戻さない。厚みが見える角度が既定の姿勢
+    el.style.setProperty("--rx", `${rest0.rx}deg`);
+    el.style.setProperty("--ry", `${rest0.ry}deg`);
+    el.style.setProperty("--lift", "12px");
+    el.style.setProperty("--sx", "8px");
+    el.style.setProperty("--sy", "-6px");
   };
 
   return (
@@ -140,6 +150,12 @@ const Group = ({ index, title, items }: StackGroup) => {
         ref={card}
         onPointerMove={tilt}
         onPointerLeave={rest}
+        style={
+          {
+            "--rest-rx": `${rest0.rx}deg`,
+            "--rest-ry": `${rest0.ry}deg`,
+          } as CSSProperties
+        }
         className="stack-card rounded-lg border-neon border-neon-green bg-cyber-black p-3"
       >
         {/* 傾きに合わせて動く光沢 */}
@@ -179,11 +195,11 @@ export const Stack = () => {
           {GROUPS.map((group, i) => (
             <div
               key={group.title}
-              // 右の列だけ少し下げる
-              className="lg:[transform:translateY(var(--step))]"
+              // 右の列だけ少し下げる。漂いが transform を使うので margin で付ける
+              className="stack-float lg:[margin-top:var(--step)]"
               style={{ "--step": `${(i % 2) * 2}rem` } as CSSProperties}
             >
-              <Group {...group} />
+              <Group {...group} column={i % 2} />
             </div>
           ))}
         </div>

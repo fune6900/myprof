@@ -265,14 +265,19 @@
   perspective-origin: 50% 40%;
 }
 
+/*
+ * 静止状態から傾けておく。真正面を向いていると厚みの面が真後ろに隠れて
+ * 平らな板に見えてしまうため、最初から角度を付けて厚みを見せる。
+ */
 .stack-card {
   position: relative;
   transform-style: preserve-3d;
-  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
-    translateZ(var(--lift, 0px));
+  transform: rotateX(var(--rx, var(--rest-rx, 7deg)))
+    rotateY(var(--ry, var(--rest-ry, -12deg)))
+    translateZ(var(--lift, 12px));
   /* 傾けた向きと逆に影を落とすと、浮いているように見える */
-  box-shadow: calc(var(--sx, 0px) * -1) calc(var(--sy, 0px) * -1 + 10px)
-    30px rgba(0, 0, 0, 0.55);
+  box-shadow: calc(var(--sx, 8px) * -1) calc(var(--sy, -6px) * -1 + 14px)
+    34px rgba(0, 0, 0, 0.6);
   /* 離れたときはゆっくり戻し、追従中は素早く付いてくる */
   transition:
     transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
@@ -314,6 +319,35 @@
   transform-style: preserve-3d;
 }
 
+/*
+ * ごくゆっくり漂わせる。止まっていると絵に見えるので、
+ * わずかに動かして「空間に置かれた物」だと伝える。
+ * カード本体とは別の層に掛けて、傾きの transform とぶつからないようにする。
+ */
+.stack-float {
+  animation: stack-float 9s ease-in-out infinite alternate;
+}
+
+.stack-float:nth-child(even) {
+  animation-duration: 11s;
+  animation-delay: -3s;
+}
+
+@keyframes stack-float {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-float {
+    animation: none;
+  }
+}
+
 /* 傾きに合わせて動く光沢。面が向きを変えている感じを補強する */
 .stack-card-sheen {
   position: absolute;
@@ -340,6 +374,7 @@
     transition: none;
     box-shadow: none;
   }
+
 
   .stack-card-lift {
     transform: none;
