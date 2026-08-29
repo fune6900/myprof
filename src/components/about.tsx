@@ -1,253 +1,340 @@
-import { Fragment, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import { animate, createScope, onScroll, stagger, utils, type Scope } from "animejs";
 import { RiUserStarFill } from "react-icons/ri";
-import fune from "../assets/fune.png";
+import { FiCopy, FiCheck } from "react-icons/fi";
 import { SectionHeading } from "./SectionHeading";
+import { LanyardBadge } from "../ui-component/LanyardBadge";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
-type DocEntry = {
-  /** JSDoc のタグとして出す名前 */
-  tag: string;
-  /** タグの右に添える日本語の見出し */
+/** 画面に到達したときに打刻されるコマンド */
+const PROMPT = "$ npx show-profile --riku";
+
+type Message = {
+  /** 小さく添える見出し */
   label: string;
   body: string;
 };
 
-type InfoEntry = {
-  key: string;
-  /** 数値はそのまま、文字列は "..." で囲んで出す */
-  value: string | number;
-};
-
-const DOC: DocEntry[] = [
+const MESSAGES: Message[] = [
   {
-    tag: "motivation",
-    label: "ものづくりへの原動力",
-    body: "頭の中にあるアイデアが、コードを通じて実際に動くプロダクトへと形を成していく過程そのものが好きです。何もない白紙の状態から、人々の生活や業務を支える仕組みを作り上げる創作の楽しさが、エンジニアとしてのモチベーションの源泉です。",
+    label: "motivation",
+    body: "頭の中のアイデアが、コードを通じて動くものに変わる。その過程そのものが好きです。",
   },
   {
-    tag: "focus",
-    label: "得意な領域・関心のある分野",
-    body: "現在は特定の領域に絞り込まず、Web開発からAIツールの活用まで幅広く手を動かしながら自分のコアとなる強みを見定めている段階です。新しい技術に抵抗なく触れ、実際に動くものを作りながら領域を広げています。",
+    label: "focus",
+    body: "領域を絞らず、Web 開発から AI ツールまで手を動かしながらコアを見定めている段階です。",
   },
   {
-    tag: "value",
-    label: "開発理念",
-    body: "『シンプルに作って、シンプルに解決する』がモットー。無駄に複雑にせず、一番スマートな方法で課題をクリアします。",
+    label: "value",
+    body: "シンプルに作って、シンプルに解決する。",
   },
 ];
 
-const PROFILE: InfoEntry[] = [
+type Field = {
+  key: string;
+  /** 数値はそのまま、文字列は引用符で囲んで出す */
+  value: string | number;
+};
+
+const FIELDS: Field[] = [
   { key: "name", value: "Riku Funagayama" },
   { key: "born", value: 2003 },
   { key: "from", value: "宮崎県" },
   { key: "based", value: "東京都" },
   { key: "role", value: "System Engineer" },
-  { key: "status", value: "都内でエンジニアとして活動中" },
-  { key: "contact", value: "riku.riku1019@icloud.com" },
 ];
 
-const HOBBIES = [
-  "古着屋巡り",
-  "レコード集め",
-  "ガジェット",
-  "インテリア",
-  "観葉植物",
-  "ゲーム",
-  "アニメ",
-  "プログラミング",
+/** 趣味。ホバーで上にアイコンが浮かぶ */
+const HOBBIES: { label: string; icon: string }[] = [
+  { label: "古着屋巡り", icon: "👕" },
+  { label: "レコード集め", icon: "💿" },
+  { label: "ガジェット", icon: "🎧" },
+  { label: "インテリア", icon: "🛋️" },
+  { label: "観葉植物", icon: "🌱" },
+  { label: "ゲーム", icon: "🎮" },
+  { label: "アニメ", icon: "📺" },
+  { label: "プログラミング", icon: "💻" },
 ];
 
-/**
- * 配列を 1 行に並べる数。
- * 全角の項目が多いので、狭い画面でも横に溢れない 2 つまでに抑える。
- */
-const HOBBIES_PER_LINE = 2;
+type Mode = "ts" | "json";
 
-const chunk = <T,>(items: readonly T[], size: number): T[][] => {
-  const rows: T[][] = [];
-  for (let index = 0; index < items.length; index += size) {
-    rows.push(items.slice(index, index + size));
-  }
-  return rows;
+/** コピー用の生テキスト。表示と同じ内容を組み立てる */
+const toPlainText = (mode: Mode): string => {
+  const indent = "  ";
+  const q = (key: string) => (mode === "json" ? `"${key}"` : key);
+  const fields = FIELDS.map(
+    (f) =>
+      `${indent}${q(f.key)}: ${typeof f.value === "number" ? f.value : `"${f.value}"`},`,
+  );
+  const hobbies = [
+    `${indent}${q("hobbies")}: [`,
+    ...HOBBIES.map((h) => `${indent}${indent}"${h.label}",`),
+    `${indent}],`,
+  ];
+  const body = [...fields, ...hobbies].join("\n");
+
+  return mode === "json"
+    ? `{\n${body}\n}`
+    : `const profile: Profile = {\n${body}\n};`;
 };
 
-/*
- * 構文強調のトークン。
- * base の `*` が要素ごとに --neon-text-color を戻すので、
- * 色は入れ子で継がせず span ひとつずつに持たせる。
- */
-const Punct = ({ children }: { children: ReactNode }) => (
-  <span className="text-neon-green opacity-40">{children}</span>
-);
-
-const Str = ({ children }: { children: ReactNode }) => (
-  <span className="text-neon-blue">&quot;{children}&quot;</span>
-);
-
-/** キーは幅を固定する。等幅なのでこれだけで値が縦に揃う */
-const Key = ({ name }: { name: string }) => (
-  <span className="inline-block min-w-[9ch]">
-    <span className="text-neon-green">{name}</span>
-    <Punct>:</Punct>
+/** 趣味 1 件。ホバーでアイコンが浮かび、文字が光る */
+const Hobby = ({ label, icon }: { label: string; icon: string }) => (
+  <span className="group relative inline-block">
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 scale-75 opacity-0 transition-all duration-300 group-hover:-top-7 group-hover:scale-100 group-hover:opacity-100"
+    >
+      {icon}
+    </span>
+    <span className="text-neon-blue transition-colors duration-300 group-hover:text-neon-green group-hover:drop-shadow-[0_0_12px_rgba(0,255,194,0.9)]">
+      &quot;{label}&quot;
+    </span>
   </span>
 );
 
-const Value = ({ value }: { value: string | number }) =>
-  typeof value === "number" ? (
-    <span className="text-neon-orange">{value}</span>
-  ) : (
-    <Str>{value}</Str>
-  );
-
-/**
- * コメント行。行頭の ` * ` を独立した flex item にしておくと、
- * 本文が折り返しても字下げが揃う（エディタの折り返しと同じ見え方）。
- */
-const CommentLine = ({ children }: { children: ReactNode }) => (
-  <span className="flex min-w-0">
-    <span className="shrink-0 text-neon-green opacity-40">{" * "}</span>
-    {children}
-  </span>
-);
-
-/**
- * 自身の基本情報だけを扱うセクション。
- * 経歴はターミナルのログとして Prof セクションに分けている。
- *
- * 中身は profile.ts の 1 ファイルとして読ませる。
- * 散文は JSDoc コメント、事実の列挙はオブジェクトリテラルに置いている。
- */
 export const About = () => {
-  /*
-   * 行は flex（行番号 + 中身）なので、中身は必ず span 1 つにまとめる。
-   * 直下にトークンを並べるとトークン同士が別々の flex item になり、
-   * 間の空白が落ちて詰まって表示されてしまう。
-   */
-  const lines: ReactNode[] = [
-    <Punct>/**</Punct>,
+  const root = useRef<HTMLElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const prompt = useRef<HTMLSpanElement>(null);
+  const code = useRef<HTMLPreElement>(null);
+  const scope = useRef<Scope | null>(null);
 
-    ...DOC.flatMap((item, index) => [
-      // 段落と段落のあいだの ` *`
-      ...(index > 0 ? [<Punct>{" *"}</Punct>] : []),
+  const [mode, setMode] = useState<Mode>("ts");
+  const [copied, setCopied] = useState(false);
 
-      <CommentLine>
-        <span className="shrink-0 text-neon-yellow">@{item.tag}</span>
-        <span className="min-w-0 whitespace-normal pl-3 text-neon-green">
-          {item.label}
-        </span>
-      </CommentLine>,
+  // 広い画面ではセクションが 1 画面ぶんに固定されるので、この中でスクロールする
+  const isWide = useMediaQuery("(min-width: 768px)");
 
-      <CommentLine>
-        <span className="min-w-0 flex-1 whitespace-normal text-neon-white">
-          {item.body}
-        </span>
-      </CommentLine>,
-    ]),
+  useEffect(() => {
+    if (!root.current || !prompt.current) return;
 
-    <Punct>{" */"}</Punct>,
+    const promptEl = prompt.current;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    <span>
-      <span className="text-neon-pink">const</span>{" "}
-      <span className="text-neon-white">profile</span>
-      <Punct>:</Punct> <span className="text-neon-yellow">Profile</span>{" "}
-      <Punct>= {"{"}</Punct>
-    </span>,
+    if (reduce) {
+      promptEl.textContent = PROMPT;
+      return;
+    }
 
-    ...PROFILE.map((item) => (
-      <span className="pl-[2ch]">
-        <Key name={item.key} />
-        <Value value={item.value} />
-        <Punct>,</Punct>
-      </span>
-    )),
+    // 内側でスクロールするときはそちらを、しないときは画面のスクロールを見る
+    const container = isWide ? scroller.current ?? undefined : undefined;
 
-    <span className="pl-[2ch]">
-      <Key name="hobbies" />
-      <Punct>[</Punct>
-    </span>,
+    scope.current = createScope({ root }).add(() => {
+      // 1. 到達したら 1 文字ずつ打つ
+      const typing = { chars: 0 };
+      promptEl.textContent = "";
 
-    ...chunk(HOBBIES, HOBBIES_PER_LINE).map((row) => (
-      <span className="pl-[4ch]">
-        {row.map((hobby, index) => (
-          <Fragment key={hobby}>
-            <Str>{hobby}</Str>
-            <Punct>,</Punct>
-            {index < row.length - 1 ? " " : null}
-          </Fragment>
-        ))}
-      </span>
-    )),
+      animate(typing, {
+        chars: PROMPT.length,
+        duration: PROMPT.length * 55,
+        ease: "linear",
+        autoplay: onScroll({ container, enter: "bottom-=40 top", sync: "play" }),
+        onUpdate: () => {
+          promptEl.textContent = PROMPT.slice(0, Math.floor(typing.chars));
+        },
+      });
 
-    <span className="pl-[2ch]">
-      <Punct>],</Punct>
-    </span>,
+      // 2. メッセージを 1 行ずつ、下から浮かせて光らせる
+      const messages = root.current?.querySelectorAll('[data-reveal="message"]');
+      if (messages?.length) {
+        utils.set(messages, { opacity: 0, y: 40 });
+        animate(messages, {
+          opacity: [0, 1],
+          y: [40, 0],
+          duration: 900,
+          ease: "out(3)",
+          delay: stagger(120),
+          autoplay: onScroll({ container, enter: "bottom-=60 top", sync: "play" }),
+        });
+      }
 
-    <Punct>{"};"}</Punct>,
-  ];
+      // 3. 生コードは 1 行ずつ立ち上げる
+      const lines = root.current?.querySelectorAll('[data-reveal="line"]');
+      if (lines?.length) {
+        utils.set(lines, { opacity: 0, x: 24 });
+        animate(lines, {
+          opacity: [0, 1],
+          x: [24, 0],
+          duration: 600,
+          ease: "out(3)",
+          delay: stagger(35),
+          autoplay: onScroll({ container, enter: "bottom-=40 top", sync: "play" }),
+        });
+      }
+    });
+
+    return () => {
+      scope.current?.revert();
+      scope.current = null;
+    };
+  }, [isWide]);
+
+  /* 表示を切り替えたら、行がすっと入れ替わるように見せる */
+  useEffect(() => {
+    const el = code.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const lines = el.querySelectorAll("[data-line]");
+    if (!lines.length) return;
+
+    const animation = animate(lines, {
+      opacity: [0, 1],
+      y: [10, 0],
+      duration: 420,
+      ease: "out(3)",
+      delay: stagger(18),
+    });
+
+    return () => {
+      animation.revert();
+    };
+  }, [mode]);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(toPlainText(mode));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // クリップボードが使えない環境では何もしない
+    }
+  };
+
+  const quote = (key: string) =>
+    mode === "json" ? (
+      <span className="text-neon-green">&quot;{key}&quot;</span>
+    ) : (
+      <span className="text-neon-green">{key}</span>
+    );
 
   return (
     <section
+      ref={root}
       id="about"
       aria-labelledby="about-heading"
       className="flex min-h-dvh w-full flex-col px-4 pb-10 pt-20 md:h-full md:min-h-0 md:px-10 md:py-10"
     >
       <SectionHeading id="about-heading" title="About" icon={RiUserStarFill} />
 
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,4fr)_minmax(0,6fr)] lg:items-center lg:gap-10">
-          {/* 左：顔と肩書き */}
-          <div
-            data-anim="item"
-            className="flex flex-col items-center rounded-lg border-neon border-neon-green bg-cyber-black p-6 text-center"
-          >
-            <img
-              src={fune}
-              alt="プロフィール画像"
-              className="h-28 w-28 shrink-0 rounded-full border-2 border-neon-green object-cover md:h-40 md:w-40"
-            />
-            <h3 className="mt-4 text-xl font-bold text-neon-white md:text-2xl">
-              Riku Funagayama
-            </h3>
-            {/* profile.ts の role と同じ内容。片方だけ変えないこと */}
-            <p className="mt-1 text-sm text-neon-green md:text-base">
-              System Engineer
-            </p>
-          </div>
+      <div className="grid min-h-0 flex-1 gap-6 md:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] md:gap-10">
+        {/* 左：掴んで振れるストラップ。狭い画面では出さない */}
+        <LanyardBadge />
 
-          {/* 右：profile.ts。1 段ずらして斜めの流れをつくる */}
-          <div className="md:translate-x-6">
-            <div
-              data-anim="item"
-              className="overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black"
-            >
-              {/* エディタのタブに見立てたファイル名 */}
-              <div className="code-bar px-3 py-1.5 font-mono text-[0.65rem] text-neon-green md:px-4 md:text-xs">
-                profile.ts
-              </div>
-
-              {/*
-                広い画面はセクションの高さが 1 画面ぶんに固定されるので、
-                入り切らないぶんはこの中でスクロールさせる。
-                data-scrollable を付けておくと、斜め展開モードでも
-                読み切るまでスクロールを横取りされない。
-              */}
-              <pre
-                data-scrollable
-                className="overflow-auto px-3 py-3 font-mono text-[0.68rem] leading-relaxed md:max-h-[calc(100dvh-11rem)] md:px-4 md:py-4 md:text-sm md:leading-normal"
-              >
-                <ol>
-                  {lines.map((line, index) => (
-                    <li key={index} className="flex">
-                      {/* 行番号はコピーに混ざらないよう選択させない */}
-                      <span className="w-5 shrink-0 select-none pr-3 text-right text-neon-green opacity-25 md:w-6">
-                        {index + 1}
-                      </span>
-                      {line}
-                    </li>
-                  ))}
-                </ol>
-              </pre>
+        {/* 右：到達 → 展開 → 生コード の順に読ませる */}
+        <div
+          ref={scroller}
+          data-scrollable
+          className="relative min-h-0 md:overflow-y-auto md:pr-2"
+        >
+          {/* 右上に浮かせる最小限の操作 */}
+          <div className="sticky top-0 z-10 flex justify-end gap-2 bg-cyber-black/70 py-1 backdrop-blur-sm">
+            <div className="flex gap-1 text-[0.7rem] md:text-xs">
+              {(["ts", "json"] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setMode(value)}
+                  aria-pressed={mode === value}
+                  className={`px-2 py-0.5 uppercase tracking-widest transition-colors duration-300 ${
+                    mode === value
+                      ? "text-neon-green"
+                      : "text-neon-white opacity-40 hover:opacity-80"
+                  }`}
+                >
+                  {value}
+                </button>
+              ))}
             </div>
+
+            <button
+              type="button"
+              onClick={copy}
+              aria-label="プロフィールをコピー"
+              className="flex items-center gap-1 px-2 py-0.5 text-[0.7rem] text-neon-white transition-colors duration-300 hover:text-neon-green md:text-xs"
+            >
+              {copied ? <FiCheck /> : <FiCopy />}
+              {copied ? "Copied!" : null}
+            </button>
           </div>
+
+          {/* 1. プロンプト */}
+          <p className="mt-2 font-mono text-2xl leading-tight text-neon-green md:text-4xl lg:text-5xl">
+            <span ref={prompt} />
+            <span className="ml-0.5 inline-block w-[0.6ch] animate-pulse bg-neon-green align-middle text-transparent">
+              _
+            </span>
+          </p>
+
+          {/* 2. メッセージ */}
+          <div className="mt-10 flex flex-col gap-8 md:mt-14 md:gap-12">
+            {MESSAGES.map((message) => (
+              <div key={message.label} data-reveal="message">
+                <p className="font-mono text-xs uppercase tracking-widest text-neon-green opacity-60 md:text-sm">
+                  @{message.label}
+                </p>
+                <p className="mt-2 text-xl leading-snug text-neon-white drop-shadow-[0_0_18px_rgba(255,255,255,0.25)] md:text-3xl lg:text-4xl">
+                  {message.body}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* 3. 枠なしの生コード */}
+          <pre
+            ref={code}
+            className="mt-12 whitespace-pre-wrap font-mono text-sm leading-loose md:mt-16 md:text-base lg:text-lg"
+          >
+            {mode === "ts" ? (
+              <span data-line data-reveal="line" className="block">
+                <span className="text-neon-pink">const</span>{" "}
+                <span className="text-neon-white">profile</span>
+                <span className="text-neon-green opacity-40">:</span>{" "}
+                <span className="text-neon-yellow">Profile</span>{" "}
+                <span className="text-neon-green opacity-40">= {"{"}</span>
+              </span>
+            ) : (
+              <span data-line data-reveal="line" className="block">
+                <span className="text-neon-green opacity-40">{"{"}</span>
+              </span>
+            )}
+
+            {FIELDS.map((field) => (
+              <span key={field.key} data-line data-reveal="line" className="block pl-[2ch]">
+                {quote(field.key)}
+                <span className="text-neon-green opacity-40">:</span>{" "}
+                {typeof field.value === "number" ? (
+                  <span className="text-neon-orange">{field.value}</span>
+                ) : (
+                  <span className="text-neon-blue">&quot;{field.value}&quot;</span>
+                )}
+                <span className="text-neon-green opacity-40">,</span>
+              </span>
+            ))}
+
+            <span data-line data-reveal="line" className="block pl-[2ch]">
+              {quote("hobbies")}
+              <span className="text-neon-green opacity-40">: [</span>
+            </span>
+
+            {HOBBIES.map((hobby) => (
+              <span key={hobby.label} data-line data-reveal="line" className="block pl-[4ch]">
+                <Hobby label={hobby.label} icon={hobby.icon} />
+                <span className="text-neon-green opacity-40">,</span>
+              </span>
+            ))}
+
+            <span data-line data-reveal="line" className="block pl-[2ch]">
+              <span className="text-neon-green opacity-40">],</span>
+            </span>
+
+            <span data-line data-reveal="line" className="block">
+              <span className="text-neon-green opacity-40">
+                {mode === "ts" ? "};" : "}"}
+              </span>
+            </span>
+          </pre>
         </div>
       </div>
     </section>
