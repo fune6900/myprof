@@ -86,7 +86,9 @@ const GROUPS: StackGroup[] = [
 ];
 
 /** 傾きの上限 (deg) */
-const MAX_TILT = 11;
+const MAX_TILT = 17;
+/** 影をずらす量の上限 (px) */
+const MAX_SHADOW = 26;
 
 const Group = ({ index, title, items }: StackGroup) => {
   const card = useRef<HTMLDivElement>(null);
@@ -105,7 +107,12 @@ const Group = ({ index, title, items }: StackGroup) => {
     el.dataset.tilting = "true";
     el.style.setProperty("--rx", `${-y * MAX_TILT * 2}deg`);
     el.style.setProperty("--ry", `${x * MAX_TILT * 2}deg`);
-    el.style.setProperty("--lift", "14px");
+    el.style.setProperty("--lift", "26px");
+    el.style.setProperty("--sx", `${x * MAX_SHADOW * 2}px`);
+    el.style.setProperty("--sy", `${y * MAX_SHADOW * 2}px`);
+    // 光沢の位置。カード内の相対位置をそのまま渡す
+    el.style.setProperty("--mx", `${(x + 0.5) * 100}%`);
+    el.style.setProperty("--my", `${(y + 0.5) * 100}%`);
   };
 
   const rest = () => {
@@ -115,6 +122,8 @@ const Group = ({ index, title, items }: StackGroup) => {
     el.style.setProperty("--rx", "0deg");
     el.style.setProperty("--ry", "0deg");
     el.style.setProperty("--lift", "0px");
+    el.style.setProperty("--sx", "0px");
+    el.style.setProperty("--sy", "0px");
   };
 
   return (
@@ -131,20 +140,25 @@ const Group = ({ index, title, items }: StackGroup) => {
         ref={card}
         onPointerMove={tilt}
         onPointerLeave={rest}
-        className="stack-card relative flex flex-wrap gap-x-4 gap-y-1 rounded-lg border-neon border-neon-green bg-cyber-black p-3"
+        className="stack-card rounded-lg border-neon border-neon-green bg-cyber-black p-3"
       >
-        {items.map((item) => (
-          <div
-            key={item.label}
-            data-anim="item"
-            className="flex w-full items-center gap-2 p-1 sm:w-[calc(50%-0.5rem)]"
-          >
-            <div className="text-2xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)] md:text-3xl">
-              <item.icon />
+        {/* 傾きに合わせて動く光沢 */}
+        <span aria-hidden="true" className="stack-card-sheen" />
+
+        <div className="stack-card-lift flex flex-wrap gap-x-4 gap-y-1">
+          {items.map((item) => (
+            <div
+              key={item.label}
+              data-anim="item"
+              className="flex w-full items-center gap-2 p-1 sm:w-[calc(50%-0.5rem)]"
+            >
+              <div className="text-2xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)] md:text-3xl">
+                <item.icon />
+              </div>
+              <p className="text-base text-neon-white md:text-lg">{item.label}</p>
             </div>
-            <p className="text-base text-neon-white md:text-lg">{item.label}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

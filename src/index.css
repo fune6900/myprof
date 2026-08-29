@@ -256,18 +256,27 @@
  * Stack の分類カードを立体にする。
  * WebGL は使わない。中身が文字とアイコンなので、CSS の 3D 変形で
  * 奥行きを付けるほうが読みやすく、依存も増えない。
+ *
+ * 手前から順に「中身」「表の面」「厚みの面 2 枚」を重ね、
+ * 傾けたときに 3 枚の面がずれて見えることで厚みを出している。
  */
 .stack-scene {
-  perspective: 1100px;
+  perspective: 620px;
   perspective-origin: 50% 40%;
 }
 
 .stack-card {
+  position: relative;
   transform-style: preserve-3d;
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
     translateZ(var(--lift, 0px));
+  /* 傾けた向きと逆に影を落とすと、浮いているように見える */
+  box-shadow: calc(var(--sx, 0px) * -1) calc(var(--sy, 0px) * -1 + 10px)
+    30px rgba(0, 0, 0, 0.55);
   /* 離れたときはゆっくり戻し、追従中は素早く付いてくる */
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .stack-card[data-tilting="true"] {
@@ -275,18 +284,53 @@
 }
 
 /*
- * 奥に一枚ずらして置いた面。傾けたときにここが見えて厚みになる。
- * 枠線だけの薄い面にして、手前のカードの発光を邪魔しない。
+ * 厚みの面。奥へ 2 段ずらして置く。
+ * 枠線を主にして、手前の面の発光を濁らせないようにしている。
  */
-.stack-card::before {
+.stack-card::before,
+.stack-card::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  border: 1px solid color-mix(in srgb, var(--neon-green) 45%, transparent);
-  background: color-mix(in srgb, var(--cyber-black) 92%, var(--neon-green));
-  transform: translateZ(-18px);
   pointer-events: none;
+}
+
+.stack-card::before {
+  border: 1px solid color-mix(in srgb, var(--neon-green) 55%, transparent);
+  background: color-mix(in srgb, var(--cyber-black) 88%, var(--neon-green));
+  transform: translateZ(-24px);
+}
+
+.stack-card::after {
+  border: 1px solid color-mix(in srgb, var(--neon-green) 28%, transparent);
+  background: var(--cyber-black);
+  transform: translateZ(-48px);
+}
+
+/* 中身をさらに手前へ。傾けたとき面から浮いて見える */
+.stack-card-lift {
+  transform: translateZ(34px);
+  transform-style: preserve-3d;
+}
+
+/* 傾きに合わせて動く光沢。面が向きを変えている感じを補強する */
+.stack-card-sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    18rem circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--neon-green) 16%, transparent),
+    transparent 65%
+  );
+}
+
+.stack-card[data-tilting="true"] .stack-card-sheen {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -294,6 +338,15 @@
   .stack-card[data-tilting="true"] {
     transform: none;
     transition: none;
+    box-shadow: none;
+  }
+
+  .stack-card-lift {
+    transform: none;
+  }
+
+  .stack-card-sheen {
+    display: none;
   }
 }
 
