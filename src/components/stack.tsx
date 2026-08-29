@@ -1,7 +1,23 @@
 import type { IconType } from "react-icons";
 import { DiRuby } from "react-icons/di";
-import { SiTypescript, SiRubyonrails } from "react-icons/si";
-import { FaHtml5, FaCss3Alt, FaReact, FaPhp, FaLaravel, FaDocker, FaCode } from "react-icons/fa";
+import {
+  SiTypescript,
+  SiRubyonrails,
+  SiJavascript,
+  SiTailwindcss,
+  SiBootstrap,
+  SiMysql,
+} from "react-icons/si";
+import {
+  FaHtml5,
+  FaCss3Alt,
+  FaReact,
+  FaPhp,
+  FaLaravel,
+  FaDocker,
+  FaGithub,
+  FaCode,
+} from "react-icons/fa";
 import { TbBrandNextjs } from "react-icons/tb";
 import { RiSupabaseFill } from "react-icons/ri";
 import { BiLogoPostgresql } from "react-icons/bi";
@@ -30,10 +46,13 @@ const GROUPS: StackGroup[] = [
     title: "FRONTEND TECHNOLOGIES",
     items: [
       { icon: SiTypescript, label: "TypeScript" },
+      { icon: SiJavascript, label: "JavaScript" },
       { icon: FaReact, label: "React" },
       { icon: TbBrandNextjs, label: "Next.js" },
       { icon: FaHtml5, label: "HTML" },
       { icon: FaCss3Alt, label: "CSS" },
+      { icon: SiTailwindcss, label: "Tailwind CSS" },
+      { icon: SiBootstrap, label: "Bootstrap" },
     ],
   },
   {
@@ -51,13 +70,17 @@ const GROUPS: StackGroup[] = [
     title: "DATABASES & ORMS",
     items: [
       { icon: BiLogoPostgresql, label: "PostgreSQL" },
+      { icon: SiMysql, label: "MySQL" },
       { icon: RiSupabaseFill, label: "Supabase" },
     ],
   },
   {
     index: "04",
     title: "TOOLS & INFRASTRUCTURE",
-    items: [{ icon: FaDocker, label: "Docker" }],
+    items: [
+      { icon: FaDocker, label: "Docker" },
+      { icon: FaGithub, label: "GitHub" },
+    ],
   },
 ];
 
