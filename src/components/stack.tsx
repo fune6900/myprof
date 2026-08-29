@@ -1,3 +1,4 @@
+import { useRef, type CSSProperties, type PointerEvent } from "react";
 import type { IconType } from "react-icons";
 import { DiRuby } from "react-icons/di";
 import {
@@ -84,7 +85,38 @@ const GROUPS: StackGroup[] = [
   },
 ];
 
+/** 傾きの上限 (deg) */
+const MAX_TILT = 11;
+
 const Group = ({ index, title, items }: StackGroup) => {
+  const card = useRef<HTMLDivElement>(null);
+
+  /** カード上のカーソル位置を傾きに変える。中心が 0、端で最大 */
+  const tilt = (event: PointerEvent<HTMLDivElement>) => {
+    const el = card.current;
+    if (!el) return;
+    // 指では傾けない。スクロール中に触れて傾いたまま残るのを避ける
+    if (event.pointerType !== "mouse") return;
+
+    const rect = el.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width - 0.5;
+    const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+    el.dataset.tilting = "true";
+    el.style.setProperty("--rx", `${-y * MAX_TILT * 2}deg`);
+    el.style.setProperty("--ry", `${x * MAX_TILT * 2}deg`);
+    el.style.setProperty("--lift", "14px");
+  };
+
+  const rest = () => {
+    const el = card.current;
+    if (!el) return;
+    el.dataset.tilting = "false";
+    el.style.setProperty("--rx", "0deg");
+    el.style.setProperty("--ry", "0deg");
+    el.style.setProperty("--lift", "0px");
+  };
+
   return (
     <div className="text-left">
       <h3
@@ -95,7 +127,12 @@ const Group = ({ index, title, items }: StackGroup) => {
         {title}
       </h3>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 rounded-lg border-neon border-neon-green p-3">
+      <div
+        ref={card}
+        onPointerMove={tilt}
+        onPointerLeave={rest}
+        className="stack-card relative flex flex-wrap gap-x-4 gap-y-1 rounded-lg border-neon border-neon-green bg-cyber-black p-3"
+      >
         {items.map((item) => (
           <div
             key={item.label}
@@ -124,13 +161,13 @@ export const Stack = () => {
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
         {/* 4 グループ。広い画面は 2 列に組み、1 列ずつ下げて斜めの流れをつくる */}
-        <div className="grid w-full max-w-5xl gap-4 lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6">
+        <div className="stack-scene grid w-full max-w-5xl gap-4 lg:grid-cols-2 lg:gap-x-8 lg:gap-y-6">
           {GROUPS.map((group, i) => (
             <div
               key={group.title}
               // 右の列だけ少し下げる
               className="lg:[transform:translateY(var(--step))]"
-              style={{ "--step": `${(i % 2) * 2}rem` } as React.CSSProperties}
+              style={{ "--step": `${(i % 2) * 2}rem` } as CSSProperties}
             >
               <Group {...group} />
             </div>
