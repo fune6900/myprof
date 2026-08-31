@@ -3,6 +3,7 @@ import { FaGithub, FaEnvelope, FaPaperPlane } from "react-icons/fa";
 import { BsTwitterX } from "react-icons/bs";
 import { SiQiita } from "react-icons/si";
 import { SectionHeading } from "./SectionHeading";
+import { Footer } from "../ui-component/Footer";
 import noteLogo from "../assets/note.png";
 
 type Channel = {
@@ -29,7 +30,7 @@ const CHANNELS: Channel[] = [
     icon: BsTwitterX,
   },
   {
-    label: "Email",
+    label: "email",
     handle: "riku.riku1019@icloud.com",
     href: "mailto:riku.riku1019@icloud.com",
     icon: FaEnvelope,
@@ -81,7 +82,7 @@ export const Contact = () => {
                   event.currentTarget.style.setProperty("--my", `${event.clientY - rect.top}px`);
                 }}
               >
-                <span className="shrink-0 text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)] md:text-4xl">
+                <span className="shrink-0 text-3xl drop-shadow-[0_0_10px_rgba(255,85,0,0.85)] md:text-4xl">
                   {channel.image ? (
                     <img src={channel.image} alt="" className="h-8 w-8 rounded md:h-9 md:w-9" />
                   ) : (
@@ -90,7 +91,7 @@ export const Contact = () => {
                 </span>
 
                 <span className="min-w-0">
-                  <span className="block text-sm uppercase tracking-widest text-neon-green md:text-base">
+                  <span className="block text-sm tracking-widest text-neon-green md:text-base">
                     {channel.label}
                   </span>
                   <span className="block truncate text-xs text-neon-white md:text-sm">
@@ -102,6 +103,8 @@ export const Contact = () => {
           ))}
         </ul>
       </div>
+
+      <Footer />
     </section>
   );
 };

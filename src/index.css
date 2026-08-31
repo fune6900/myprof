@@ -3,7 +3,7 @@
 
 /*
  * スマホは普通の縦スクロール。ドキュメント側のスクロールを殺すのは
- * 斜め展開に切り替わる幅（App の DIAGONAL_QUERY と揃える）から。
+ * 奥行き移動に切り替わる幅（App の TUNNEL_QUERY と揃える）から。
  */
 @media (min-width: 768px) {
   html,
@@ -18,10 +18,16 @@
  * 横には決してスクロールさせない。
  * マーキーの帯や Stack カードの側面など、装飾は意図的に枠の外へ出る作りなので、
  * それが横スクロールにならないようここで止めておく。
+ *
+ * hidden ではなく clip を使う。hidden は overflow-y を auto に変えて
+ * body 自体をスクロールコンテナにしてしまい、実際に縦へ動くのは html なので、
+ * 中の position: sticky が貼り付く先を失って効かなくなる（ScrollScene の
+ * sticky モードがこれで死ぬ）。clip は同じように切り落とすだけで
+ * スクロールコンテナを作らないので、sticky がそのまま生きる。
  */
 html,
 body {
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 
@@ -445,4 +451,1340 @@ body {
   font-family: "DotGothic16", sans-serif;
   font-weight: 400;
   font-style: normal;
+}
+
+/* ==========================================================================
+ * サイバーパンク都市
+ *
+ * 斜めの経路に沿って建つ構造物の層。3D になるのはここだけで、
+ * セクションは 2D のまま上に重ねる（文字のグローを 3D で動かすと
+ * 毎フレーム別スケールでラスタ化されてぼけるため）。
+ *
+ * .stack-card と同じ CSS 3D の作法。WebGL は使わない。
+ * ========================================================================== */
+
+/*
+ * 街全体の濃さ。背景なので少し引く。
+ *
+ * 中央をよけるのはマスクではなく、CyberCity 側で 1 つずつ濃さを決めている。
+ * 動き続ける中身に全画面のマスクを掛けると、毎フレーム全面を合成し直すことに
+ * なってフレーム時間が倍以上に跳ねた（p95 で 23ms → 42ms）。
+ */
+.city-viewport {
+  opacity: 0.82;
+}
+
+/*
+ * 狭い画面では街をさらに引く。Z が動かないぶん構造物が留まり続けるので、
+ * 同じ濃さだと本文とずっと張り合ってしまう。
+ */
+@media (max-width: 767px) {
+  .city-viewport {
+    opacity: 0.5;
+  }
+}
+
+.city-scene {
+  /* synthwave.ts の PERSPECTIVE と揃える。床が同じ値で投影している */
+  perspective: 900px;
+  /* 消失点は地平線。床の格子が集まる点と一致させる */
+  perspective-origin: 50% var(--sw-horizon-pos);
+}
+
+.city-world {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+/*
+ * 構造物の基準点は「地平線の消失点」。
+ *
+ * そこから --sw-ground だけ下ろした面が地面で、床の格子と同じ平面になる。
+ * 要素は translate(-50%, -100%) で足元を掴むので、奥に置くほど
+ * 地平線へ近づき、手前ほど下がる。これで床と建物の面が繋がる。
+ */
+.city-object {
+  position: absolute;
+  left: 50%;
+  top: var(--sw-horizon-pos);
+  transform-style: preserve-3d;
+}
+
+/* ---------- 塔 ---------- */
+
+/*
+ * 窓は 2 方向の繰り返しグラデーションで描く。
+ * 画像も要素も増やさずに済むうえ、拡大しても潰れない。
+ */
+.city-tower {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--city-color) 50%, transparent);
+  background-color: color-mix(in srgb, var(--cyber-black) 82%, var(--city-color));
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--city-color) 62%, transparent) 0 2px,
+      transparent 2px var(--city-window)
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--city-color) 44%, transparent) 0 2px,
+      transparent 2px var(--city-window)
+    );
+}
+
+/* 屋上の標識灯。赤で点けると一気に「街」になる */
+.city-tower-crown {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--neon-green);
+  box-shadow: 0 0 10px var(--neon-green);
+  transform: translateX(-50%);
+}
+
+/*
+ * 側面 1 枚。右端から外へ出した帯を奥へ倒して厚みにする。
+ * 6 面すべては作らない。数十個置くので、見えない面のぶん描画を削る。
+ */
+.city-face-side {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  height: 100%;
+  width: var(--city-depth);
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background-color: color-mix(in srgb, var(--cyber-black) 60%, #000);
+  border: 1px solid color-mix(in srgb, var(--city-color) 22%, transparent);
+}
+
+/* ---------- 縦書きの看板 ---------- */
+
+.city-sign {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  border: 2px solid var(--city-color);
+  background-color: color-mix(in srgb, var(--cyber-black) 78%, var(--city-color));
+  color: var(--city-color);
+  font-size: 2.2rem;
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 0.4em currentColor;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--city-color) 40%, transparent);
+}
+
+/* ---------- 稜線（1 枚で何棟も描く） ---------- */
+
+/*
+ * 中身は transform-style: flat にする。ここを preserve-3d にすると
+ * ビル 1 棟ずつが個別に投影・合成され、街を 1 枚に畳む意味が無くなる。
+ * flat なら何棟並べてもレイヤーは 1 枚。
+ */
+.city-skyline {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  transform-style: flat;
+}
+
+.city-skyline-bar {
+  flex: none;
+  border: 1px solid color-mix(in srgb, var(--city-color) 42%, transparent);
+  border-bottom: none;
+  background-color: color-mix(in srgb, var(--cyber-black) 84%, var(--city-color));
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--city-color) 52%, transparent) 0 1px,
+      transparent 1px var(--city-window)
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--city-color) 38%, transparent) 0 1px,
+      transparent 1px var(--city-window)
+    );
+}
+
+/* ---------- ホログラム広告 ---------- */
+
+.city-holo {
+  position: absolute;
+  inset: 0;
+  border-top: 1px solid var(--city-color);
+  border-bottom: 1px solid var(--city-color);
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--city-color) 26%, transparent) 45%,
+    transparent
+  );
+  opacity: 0.75;
+}
+
+/* ---------- 門（セクションのランドマーク） ---------- */
+
+/*
+ * 幅ゼロの箱を中心に置き、柱を左右へ --gate-half だけ振り分ける。
+ * セクションに着くと 3.6 倍まで拡大され、柱が画面の外周に来て額縁になる。
+ */
+.city-gate {
+  width: 0;
+  height: 0;
+}
+
+/*
+ * 高さは控えめに取る。到着時に 3.6 倍まで拡大されるので、46vh でも
+ * 画面上は 165vh 相当あって上下に突き抜ける。
+ * ここを大きくするとラスタする面積がそのまま増えてフレーム時間に効く。
+ */
+.city-gate-post {
+  position: absolute;
+  bottom: -23vh;
+  width: 2.6vw;
+  height: 46vh;
+  background-color: color-mix(in srgb, var(--cyber-black) 70%, var(--city-color));
+  border: 1px solid var(--city-color);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--city-color) 50%, transparent);
+}
+
+.city-gate-post-left {
+  right: var(--gate-half);
+}
+
+.city-gate-post-right {
+  left: var(--gate-half);
+}
+
+.city-gate-beam {
+  position: absolute;
+  left: 50%;
+  bottom: 20vh;
+  width: calc(var(--gate-half) * 2 + 5.2vw);
+  height: 2.6vh;
+  transform: translateX(-50%);
+  background-color: color-mix(in srgb, var(--cyber-black) 70%, var(--city-color));
+  border: 1px solid var(--city-color);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--city-color) 50%, transparent);
+}
+
+/* 柱に縦書きで掲げる。到着して拡大しても画面の左右に残る */
+.city-gate-label {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  color: var(--city-color);
+  font-size: 1.5vw;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-shadow: 0 0 0.5em currentColor;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+ * Synthwave の風景
+ *
+ * 地平線を境に、上が SynthwaveSky（ほぼ静止画）、下が GridFloor（canvas）。
+ * HORIZON = 0.58 は src/scene/synthwave.ts と必ず揃える。
+ * ========================================================================== */
+
+/*
+ * ==========================================================================
+ * TRON パレット
+ *
+ * プラグイン（neo-metro-city）は配色をすべて CSS 変数で持っているので、
+ * ここで上書きすると枠線・文字・グロー・グリッドまで一斉に切り替わる。
+ * --neon-green という名前はプラグイン由来で、実際の色はオレンジ。
+ * 名前を変えるとプラグインのユーティリティ側と噛み合わなくなるため、
+ * 名前はそのままにして値だけ差し替えている。
+ * ==========================================================================
+ */
+:root {
+  /* 発光の主色。ライトラインのオレンジ */
+  --neon-green: #ff5500;
+  /* 対比のアクセント。ホバーとアクティブにだけ差す */
+  --neon-cyan: #00ffff;
+  /* 極限の漆黒。ライトラインとの対比を最大にする */
+  --cyber-black: #030305;
+  --cyber-dark: #08080c;
+  --neon-white: #ffffff;
+}
+
+:root {
+  --sw-horizon-pos: 58%;
+  /*
+   * 空は上から下へ「漆黒 → 焦茶 → オレンジ」と落とす。
+   * 地平線の光と床はメインカラーをそのまま参照して、
+   * UI と同じオレンジが風景側にも通るようにしている。
+   */
+  --sw-sky-top: #030305;
+  --sw-sky-high: #0a0604;
+  --sw-sky-mid: #2a0f02;
+  --sw-sky-low: #7a2a02;
+  --sw-glow: var(--neon-green);
+  --sw-grid: var(--neon-green);
+  /* 地平線から画面下端まで＝カメラの高さ。--sw-horizon-pos と合計 100 にする */
+  --sw-ground: 42vh;
+  /* 地平線際の線。遠いものほど大気に溶けるので少し沈めた青緑 */
+  --sw-grid-far: #b03500;
+  /* 太陽だけは上を暖色寄りに残す。全部同じ緑だと平板になるため */
+  --sw-sun-top: #ffb066;
+  --sw-sun-mid: #ff5500;
+  --sw-sun-bot: #7a1a00;
+}
+
+.sky-viewport {
+  overflow: hidden;
+}
+
+.sky-gradient {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    to bottom,
+    var(--sw-sky-top) 0%,
+    var(--sw-sky-high) 22%,
+    var(--sw-sky-mid) 38%,
+    var(--sw-sky-low) 47%,
+    var(--sw-glow) var(--sw-horizon-pos),
+    #1a0803 calc(var(--sw-horizon-pos) + 6%),
+    var(--sw-sky-top) 100%
+  );
+}
+
+/*
+ * 星。要素を 1 つずつ作らず、background-image に畳んである。
+ * 90 個ぶんのグラデーションでも合成されるレイヤーは 1 枚で済む。
+ */
+.sky-stars {
+  position: absolute;
+  inset: 0;
+  animation: sky-twinkle 7s ease-in-out infinite alternate;
+}
+
+@keyframes sky-twinkle {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+.sky-drift {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/* ---------- アイデンティティ・ディスク ---------- */
+
+/*
+ * 中央奥の円。レトロサンの塗りをやめ、細い同心円のリングと
+ * 水平スリットで構成する。中心は抜いて、輪郭だけが光る。
+ */
+.sky-sun {
+  position: absolute;
+  left: 50%;
+  top: var(--sw-horizon-pos);
+  width: 52vh;
+  height: 52vh;
+  transform: translate(-50%, -76%);
+  border-radius: 9999px;
+  background-image:
+    /* 同心円のライトライン */
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      transparent 0 calc(2.6% - 1.2px),
+      var(--sw-sun-mid) calc(2.6% - 1.2px) 2.6%
+    ),
+    /* 中心へ向かうほど暗く落とす */
+    radial-gradient(
+      circle at 50% 50%,
+      var(--sw-sky-top) 0 28%,
+      transparent 62%
+    );
+  border: 2px solid var(--sw-sun-top);
+  /*
+   * 幕を外したぶん、ディスク自体を控えめにして文字との差を確保する。
+   * 黒を被せずに読みやすさを戻すための調整。
+   */
+  opacity: 0.5;
+  box-shadow:
+    0 0 40px 6px color-mix(in srgb, var(--neon-green) 55%, transparent),
+    0 0 140px 40px color-mix(in srgb, var(--sw-sky-low) 45%, transparent),
+    inset 0 0 50px 10px color-mix(in srgb, var(--neon-green) 30%, transparent);
+  animation: sky-sun-pulse 9s ease-in-out infinite alternate;
+}
+
+@keyframes sky-sun-pulse {
+  from { filter: brightness(0.9); }
+  to { filter: brightness(1.12); }
+}
+
+/* 縦長の画面では主張しすぎるので落とす */
+@media (max-width: 767px) {
+  .sky-sun {
+    width: 38vh;
+    height: 38vh;
+  }
+}
+
+/* 細い水平スリット。ディスクを走る走査線 */
+.sky-sun-stripes {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0 7px,
+    var(--sw-sky-top) 7px 9px
+  );
+  /* 中心の帯だけスリットを濃く見せる */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 30%,
+    #000 44%,
+    #000 56%,
+    transparent 70%
+  );
+}
+
+/* ---------- 地平線の摩天楼 ---------- */
+
+/*
+ * 中身は transform-style: flat。棟ごとに層を作らせないための指定で、
+ * 46 棟あっても合成は 1 枚に畳まれる。
+ */
+.sky-skyline {
+  position: absolute;
+  left: -2%;
+  bottom: calc(100% - var(--sw-horizon-pos));
+  width: 104%;
+  height: 19vh;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35%;
+  transform-style: flat;
+}
+
+.sky-tower {
+  flex: none;
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--neon-green) 55%, #0a0503),
+    #150803
+  );
+  box-shadow: 0 0 12px color-mix(in srgb, var(--neon-green) 30%, transparent);
+}
+
+/* 窓の灯り。点いている棟だけ */
+.sky-tower.is-lit {
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--neon-green) 80%, transparent) 0 1px,
+      transparent 1px 7px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--neon-green) 40%, #0a0503),
+      #150803
+    );
+}
+
+/* ---------- 地平線の光 ---------- */
+
+.sky-horizon {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--sw-horizon-pos);
+  height: 2px;
+  background-color: #fff2ea;
+  box-shadow:
+    0 0 14px 4px var(--sw-glow),
+    0 0 54px 18px color-mix(in srgb, var(--sw-glow) 45%, transparent),
+    0 0 130px 46px color-mix(in srgb, var(--sw-sky-low) 35%, transparent);
+  animation: sky-horizon-breathe 6s ease-in-out infinite alternate;
+}
+
+@keyframes sky-horizon-breathe {
+  from { opacity: 0.82; }
+  to { opacity: 1; }
+}
+
+/* ---------- 床 ---------- */
+
+.grid-floor {
+  /* 地平線より上は空が描くので、床は下半分だけ見せる */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--sw-horizon-pos) - 1px),
+    #000 calc(var(--sw-horizon-pos) + 5%)
+  );
+}
+
+
+/* ==========================================================================
+ * ブルーム（光の漏れ）
+ * ========================================================================== */
+
+/*
+ * 画面の内容をそのまま暗部を潰してぼかし、screen で足し戻す。
+ * ぼけた複製を重ねるだけなので、下にある文字や線はくっきりしたまま
+ * 周りにだけ光が滲む。
+ *
+ * contrast を先に掛けるのが要点。明るいところだけを残してからぼかさないと、
+ * 背景の紫まで一緒に持ち上がって画面全体が白っぽく濁る。
+ */
+.scene-bloom {
+  position: fixed;
+  inset: 0;
+  /*
+   * セクションより下に敷く。文字の上に掛けると、ぼけた複製が本文の
+   * コントラストを削って読めなくなる。風景（空・床・街・イコライザー）
+   * だけを滲ませ、文字は下の text-shadow で光らせる。
+   */
+  z-index: 20;
+  pointer-events: none;
+  backdrop-filter: contrast(1.6) blur(15px);
+  mix-blend-mode: screen;
+  opacity: 0.55;
+}
+
+/* 動きを減らす設定でもブルームは残す（動きではなく明るさなので） */
+
+/* ==========================================================================
+ * イコライザー
+ * ========================================================================== */
+
+/*
+ * 画面下に貼り付く。ブルームより下に置いて、光が滲むようにする。
+ *
+ * 振れ幅（--eq-boost）は必ず transform に流す。height に混ぜると、
+ * スクロールのたびに 64 本ぶんのレイアウトが毎フレーム走って
+ * 60fps → 40fps まで落ちた（実測 median 16.7ms → 25.1ms）。
+ */
+.equalizer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.35vw;
+  height: 12vh;
+  padding: 0 1vw;
+  --eq-boost: 0;
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(0.45 + var(--eq-boost) * 0.55));
+  will-change: transform;
+}
+
+.equalizer-bar {
+  flex: 1 1 0;
+  min-width: 0;
+  /* 丈は固定。伸び縮みはすべて transform で行う */
+  height: 100%;
+  transform-origin: 50% 100%;
+  border-radius: 1px 1px 0 0;
+  /*
+   * 上へ向かって消えるのは、親のマスクではなく各棒のグラデーションで作る。
+   * マスクは 64 本の子が動くたびにグループごと描き直させるので高くつく。
+   */
+  background-image: linear-gradient(
+    to top,
+    var(--sw-glow) 0%,
+    #ff9a5c 42%,
+    rgba(255, 240, 250, 0) 100%
+  );
+  box-shadow: 0 0 10px color-mix(in srgb, var(--sw-glow) 55%, transparent);
+  will-change: transform;
+  animation-name: eq-wave;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/*
+ * 待機中も止まらない。棒ごとに duration と delay がずれているので、
+ * 全体としては不規則に波打って見える。
+ */
+@keyframes eq-wave {
+  from { transform: scaleY(calc(var(--eq-base) * 0.34)); }
+  to { transform: scaleY(var(--eq-base)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .equalizer-bar {
+    animation: none;
+    transform: scaleY(calc(var(--eq-base) * 0.8));
+  }
+}
+
+
+/* ==========================================================================
+ * ネオンの発光
+ *
+ * かつてここで * に 3 枚目の広い text-shadow を足して光を強めていたが、
+ * やめた。Projects のように要素数の多いセクションでは、中をスクロール
+ * するたびに数十個ぶんのぼかしを描き直すことになり、p95 が 77ms → 210ms
+ * まで悪化していた（実測）。
+ *
+ * 光の漏れは全画面の .scene-bloom が受け持っているので、
+ * 個々の要素はプラグイン既定の 2 枚で足りる。
+ * 見出しなど、大きく光らせたいものだけ個別に足す。
+ * ========================================================================== */
+
+/* 見出しのバッジだけは、はっきり光らせる */
+.neon-glow-soft {
+  text-shadow:
+    0 0 0.06em currentColor,
+    0 0 0.3em currentColor,
+    0 0 0.8em color-mix(in srgb, currentColor 60%, transparent);
+}
+
+/* ==========================================================================
+ * 奥行き方向のステージ
+ *
+ * セクションは中心から一様に拡縮させて「奥から迫ってくる」を作る。
+ * perspective / preserve-3d は使わない（TunnelStage の PERSPECTIVE 参照）。
+ * ========================================================================== */
+
+.tunnel-section {
+  will-change: transform, opacity;
+}
+
+
+/*
+ * 上端の進捗バー。
+ * プラグインの .progress は --neon-blue で線とグローを描くので、
+ * サイトのメインカラーに揃える（形は変えない）。
+ */
+.progress {
+  border-color: var(--neon-green);
+  box-shadow:
+    0 0 2px var(--neon-green),
+    0 0 8px var(--neon-green),
+    0 0 20px color-mix(in srgb, var(--neon-green) 55%, transparent),
+    inset 0 0 2px var(--neon-green),
+    inset 0 0 8px var(--neon-green);
+}
+
+
+/*
+ * 画面の外にあるカードは描画を省く。
+ *
+ * Projects と Blog は中身をセクション内でスクロールするので、見えていない
+ * カードまで毎フレーム描き直していた。ネオンのグローが 1 枚ずつ乗っている
+ * ぶん、この描き直しが高くつく（実測 p95 157ms → 116ms）。
+ * contain-intrinsic-size を添えて、省いてもスクロール位置が飛ばないようにする。
+ */
+.card-lazy {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+
+/* ==========================================================================
+ * TRON の直線的な UI
+ *
+ * 丸みを落とし、45 度の角切り（八角形）にする。
+ * clip-path は外側のグローまで切り落とすので、枠そのものではなく
+ * 内側の面に掛ける。枠線と光は border / box-shadow のまま残す。
+ * ========================================================================== */
+
+/*
+ * 丸みは全廃する。
+ *
+ * 本当に円でありたいもの（アバター、現在地の点）だけ .keep-round を付けて
+ * 除外する。それ以外は角の丸を落として直線的にする。
+ */
+[class*='rounded']:not(.keep-round),
+.progress,
+.btn,
+.badge {
+  border-radius: 0 !important;
+}
+
+/* 角を斜めに落とす。ヘッダーの HOME や時計枠などに効く */
+.border-neon:not(.keep-round) {
+  clip-path: polygon(
+    var(--chamfer, 9px) 0,
+    100% 0,
+    100% calc(100% - var(--chamfer, 9px)),
+    calc(100% - var(--chamfer, 9px)) 100%,
+    0 100%,
+    0 var(--chamfer, 9px)
+  );
+}
+
+/* 小さな要素は切り落とし量を減らす */
+.badge,
+.btn-sm,
+nav .border-neon {
+  --chamfer: 6px;
+}
+
+/* 丸を保つものと、切ると困るものは対象外にする */
+.keep-round,
+img,
+.city-object,
+.tunnel-section {
+  clip-path: none !important;
+}
+
+/*
+ * 現在地の表示も含め、発光はオレンジで通す。
+ * 一度シアンをアクセントに差したが、オレンジの中に青緑が入ると
+ * そこだけ色が飛んで見えたのでやめた。--neon-cyan は残してあるので、
+ * 差したい箇所が決まればそこにだけ当てられる。
+ */
+
+/*
+ * ホバーはオレンジで返す。
+ *
+ * プラグインの base が * に --neon-text-color: var(--neon-blue) を敷いていて、
+ * 何も指定しない要素は淡い青のままになる。明るさを上げるだけでは色相が
+ * 変わらないので、ホバー時は色そのものをオレンジに置き換える。
+ */
+a:hover,
+button:hover:not(:disabled) {
+  --neon-text-color: var(--neon-green);
+  color: var(--neon-green);
+  filter: brightness(1.2);
+}
+
+/* 選択中のヘッダー項目は塗りが反転しているので、色は触らない */
+nav[aria-label='セクション'] button[aria-current='true']:hover {
+  color: var(--cyber-black);
+}
+
+
+/* ==========================================================================
+ * 床への映り込み
+ *
+ * 地平線を軸に上下反転した同じ絵を敷き、下へ行くほど消す。
+ * 床の canvas より上、幕より下に置くと、格子の上に像が乗って
+ * 黒いガラスに映っているように見える。
+ *
+ * 実体は静止画の複製なので、毎フレームの負荷は増えない。
+ * ========================================================================== */
+
+.sky-mirror {
+  position: absolute;
+  inset: 0;
+  /* 地平線を折り返し軸にする */
+  transform: scaleY(-1);
+  transform-origin: 50% var(--sw-horizon-pos);
+  opacity: 0.22;
+  /* 遠いほど（＝地平線に近いほど）濃く、手前は溶ける */
+  mask-image: linear-gradient(
+    to top,
+    transparent 8%,
+    #000 44%,
+    #000 var(--sw-horizon-pos)
+  );
+  /* 水面のようにわずかに滲ませる */
+  filter: blur(1.5px);
+}
+
+/* 床そのものを黒いガラスに寄せる */
+.grid-floor {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--sw-horizon-pos) - 1px),
+    #000 calc(var(--sw-horizon-pos) + 5%)
+  );
+}
+
+/*
+ * 床の艶。地平線の手前に細い明るい帯を置くと、
+ * 磨いた面が光を拾っているように見える。
+ */
+.sky-gloss {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--sw-horizon-pos);
+  height: 26vh;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--neon-green) 16%, transparent) 0%,
+    transparent 70%
+  );
+}
+
+/* ==========================================================================
+ * Hero の導線を立体のタイルにする
+ *
+ * Stack のカードと同じ作法。WebGL は使わず、表・裏・側面 4 枚の
+ * 計 6 面を重ねて厚みを出す。触った位置で傾け、離れたら静止角へ戻る。
+ * ========================================================================== */
+
+.social-scene {
+  /* 4 枚が同じ消失点を共有するよう、親に一度だけ掛ける */
+  perspective: 620px;
+  perspective-origin: 50% 50%;
+}
+
+.social-tile {
+  --size: 3.4rem;
+  --depth: 12px;
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  /* 傾けた面が隣に触れないよう、少しだけ余白を持たせる */
+  padding: 2px;
+}
+
+@media (min-width: 768px) {
+  .social-tile {
+    --size: 4rem;
+    --depth: 14px;
+  }
+}
+
+.social-tile-body {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, var(--rest-rx, 8deg)))
+    rotateY(var(--ry, var(--rest-ry, -16deg)))
+    translateZ(var(--lift, 0px));
+  /* 追従は速く、離れたときはゆっくり戻す */
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- 面 ---- */
+
+.social-tile-face,
+.social-tile-front {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--neon-green);
+  background-color: color-mix(in srgb, var(--cyber-black) 82%, var(--neon-green));
+}
+
+.social-tile-front {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateZ(calc(var(--depth) / 2));
+  box-shadow:
+    0 0 10px color-mix(in srgb, var(--neon-green) 55%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--neon-green) 25%, transparent);
+}
+
+.social-tile-back {
+  transform: translateZ(calc(var(--depth) / -2)) rotateY(180deg);
+  background-color: color-mix(in srgb, var(--cyber-black) 92%, var(--neon-green));
+}
+
+/*
+ * 側面。表裏の隙間を埋める帯を 4 本、辺に沿って倒す。
+ * 幅（高さ）を厚みぶんだけ取り、辺を軸に 90 度回す。
+ */
+.social-tile-left,
+.social-tile-right {
+  width: var(--depth);
+  left: auto;
+  right: auto;
+}
+
+.social-tile-left {
+  right: 100%;
+  transform-origin: right center;
+  transform: rotateY(-90deg) translateZ(calc(var(--depth) / -2));
+}
+
+.social-tile-right {
+  left: 100%;
+  transform-origin: left center;
+  transform: rotateY(90deg) translateZ(calc(var(--depth) / -2));
+}
+
+.social-tile-top,
+.social-tile-bottom {
+  height: var(--depth);
+  top: auto;
+  bottom: auto;
+}
+
+.social-tile-top {
+  bottom: 100%;
+  transform-origin: center bottom;
+  transform: rotateX(90deg) translateZ(calc(var(--depth) / -2));
+}
+
+.social-tile-bottom {
+  top: 100%;
+  transform-origin: center top;
+  transform: rotateX(-90deg) translateZ(calc(var(--depth) / -2));
+}
+
+/* ---- 中身 ---- */
+
+/*
+ * アイコンは面よりさらに手前へ。傾けたとき浮いて見える。
+ *
+ * 色は子孫まで指定する。プラグインの base が * に
+ * --neon-text-color: var(--neon-blue) を敷いているので、
+ * 親に色を置いても中の svg には届かない。
+ */
+/*
+ * アイコンそのものは白。枠と発光はオレンジのままにして、
+ * 中身が沈まないよう対比を残す。
+ * 子孫まで指定するのは、プラグインの base が * に
+ * --neon-text-color を敷いていて親の色が svg に届かないため。
+ */
+.social-tile-icon,
+.social-tile-icon * {
+  --neon-text-color: #ffffff;
+  color: #ffffff;
+}
+
+.social-tile-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  transform: translateZ(10px);
+  transform-style: preserve-3d;
+}
+
+@media (min-width: 768px) {
+  .social-tile-icon {
+    font-size: 2rem;
+  }
+}
+
+/* 触れているあいだは面ごと明るくする */
+.social-tile:hover .social-tile-front {
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--neon-green) 80%, transparent),
+    inset 0 0 16px color-mix(in srgb, var(--neon-green) 35%, transparent);
+}
+
+/*
+ * 動きを減らす設定では、傾けも戻りもさせない。
+ * 立体であること自体は静止した角度で伝わるので、面はそのまま残す。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .social-tile-body {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+ * Hero のアバターをアイデンティティ・ディスクにする
+ *
+ * 触ると裏返り、裏には同心円のリングと識別名が入っている。
+ * 回転は CSS だけで完結させる（JS を挟まない）。
+ * ========================================================================== */
+
+.disc-scene {
+  perspective: 900px;
+}
+
+.disc-coin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* 静止時からわずかに傾けておくと、平らな絵ではなく円盤に見える */
+  transform: rotateY(-12deg) rotateX(6deg);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 触れると 1 回転して裏を見せる */
+.disc-scene:hover .disc-coin,
+.disc-scene:focus-within .disc-coin {
+  transform: rotateY(168deg) rotateX(-4deg);
+}
+
+.disc-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* 裏返ったとき、向こう側の面を透けさせない */
+  backface-visibility: hidden;
+  object-fit: cover;
+}
+
+.disc-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotateY(180deg);
+  background-color: var(--cyber-black);
+  overflow: hidden;
+}
+
+/* 裏面の同心円。ディスクの刻み */
+.disc-rings {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      transparent 0 calc(7% - 1px),
+      color-mix(in srgb, var(--neon-green) 55%, transparent) calc(7% - 1px) 7%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      color-mix(in srgb, var(--neon-green) 22%, transparent) 0 18%,
+      transparent 52%
+    );
+}
+
+/* 識別名。円盤に刻まれた文字のつもり */
+.disc-tag {
+  position: relative;
+  font-family: monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  color: var(--neon-green);
+  text-shadow: 0 0 0.5em currentColor;
+  background-color: color-mix(in srgb, var(--cyber-black) 85%, transparent);
+  padding: 0.15rem 0.35rem;
+}
+
+@media (min-width: 768px) {
+  .disc-tag {
+    font-size: 0.7rem;
+  }
+}
+
+/*
+ * 動きを減らす設定では回さない。
+ * 裏面は触れても出さず、表のまま静止させる。
+ */
+@media (prefers-reduced-motion: reduce) {
+  .disc-coin,
+  .disc-scene:hover .disc-coin,
+  .disc-scene:focus-within .disc-coin {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+ * Blog：通りを進みながら建物の電工掲示板を読む
+ *
+ * perspective は使わない。掲示板はリンクなので、当たり判定を落とす
+ * 恐れのある 3D の内側には置けない（TunnelStage と同じ理由）。
+ * 奥行きは BlogCity が 2D の scale で作る。
+ * ========================================================================== */
+
+.blog-city {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/*
+ * 建物 1 棟。位置と倍率は JS が transform に直接書く。
+ * transform-origin を左上に固定して、足元を掴む計算を単純にしておく。
+ */
+.blog-tower {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* 幅・窓の細かさ・躯体の丈は 1 棟ずつ変える（BlogCity の FACADES） */
+  width: var(--tower-w, 22rem);
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+}
+
+/* 屋上。棟によってアンテナ・標識灯・何も無しを出し分ける */
+.blog-tower::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+}
+
+.blog-tower[data-crown="antenna"]::before {
+  width: 2px;
+  height: 2.4rem;
+  background-image: linear-gradient(
+    to top,
+    var(--neon-green),
+    color-mix(in srgb, var(--neon-green) 20%, transparent)
+  );
+}
+
+.blog-tower[data-crown="beacon"]::before {
+  width: 6px;
+  height: 6px;
+  margin-bottom: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--neon-green);
+  box-shadow: 0 0 10px var(--neon-green);
+}
+
+/*
+ * 掲示板の下に続く躯体。窓だけの壁で建物の丈を作る。
+ * 掲示板を建物の上のほうに掲げた見え方になる。
+ */
+.blog-tower-body {
+  height: var(--tower-body, 14rem);
+  border: 1px solid color-mix(in srgb, var(--neon-green) 40%, transparent);
+  border-top: none;
+  background-color: color-mix(in srgb, var(--cyber-black) 90%, var(--neon-green));
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--neon-green) 26%, transparent) 0 2px,
+      transparent 2px var(--tower-window, 15px)
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--neon-green) 18%, transparent) 0 2px,
+      transparent 2px calc(var(--tower-window, 15px) + 5px)
+    );
+}
+
+/* 建物の躯体。窓は繰り返しグラデーションで描く（.city-tower と同じ作法） */
+.blog-tower-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.6rem 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--neon-green) 55%, transparent);
+  border-bottom: none;
+  background-color: color-mix(in srgb, var(--cyber-black) 86%, var(--neon-green));
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--neon-green) 22%, transparent) 0 1px,
+      transparent 1px 14px
+    ),
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--neon-green) 14%, transparent) 0 1px,
+      transparent 1px 18px
+    );
+  box-shadow: 0 0 22px color-mix(in srgb, var(--neon-green) 30%, transparent);
+}
+
+/* ---------- 電工掲示板 ---------- */
+
+.signboard {
+  display: block;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--neon-green);
+  background-color: color-mix(in srgb, var(--cyber-black) 82%, transparent);
+  text-align: left;
+  transition:
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.signboard:hover {
+  background-color: color-mix(in srgb, var(--neon-green) 16%, var(--cyber-black));
+  transform: translateX(2px);
+}
+
+/* 記事の絵。掲示板の上半分に敷く */
+.signboard-shot {
+  display: block;
+  /*
+   * OGP の比率（1200:630）のまま置く。丈を詰めて切り抜くと絵の帯しか
+   * 読めないため。丈が伸びたぶん建物が高くなるので、1 棟に載せる枚数
+   * （GROUP_PATTERN）と躯体の丈（BlogCity の FACADES）で釣り合わせて、
+   * いちばん高い棟でも画面に収まるようにしてある。
+   */
+  aspect-ratio: 1200 / 630;
+  overflow: hidden;
+  margin: -0.4rem -0.5rem 0.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--neon-green) 45%, transparent);
+  background-color: color-mix(in srgb, var(--cyber-black) 70%, transparent);
+}
+
+.signboard-shot img {
+  width: 100%;
+  height: 100%;
+  /* 端を落とさない。枠と比率が違う絵でも全体を見せる */
+  object-fit: contain;
+  /* 街に馴染ませる。彩度を落としてオレンジ側へ寄せる */
+  filter: saturate(0.75) contrast(1.05);
+}
+
+/* OGP が読めない記事（Qiita）の代わり。枠は必ず埋める */
+.signboard-shot-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.6rem;
+  color: var(--neon-green);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--neon-green) 18%, transparent) 0 1px,
+      transparent 1px 7px
+    );
+}
+
+.signboard-shot-fallback img,
+.signboard-shot-fallback svg {
+  /* 枠が OGP の比率になって背が伸びたぶん、印も大きく取る */
+  width: auto;
+  height: 38%;
+  max-width: 55%;
+}
+
+.signboard-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--neon-green);
+}
+
+.signboard-source {
+  text-transform: none;
+}
+
+.signboard-date {
+  opacity: 0.55;
+}
+
+/* いいね数は右端へ寄せる */
+.signboard-likes {
+  margin-left: auto;
+  opacity: 0.7;
+}
+
+/*
+ * 題名。2 行で打ち切る。
+ * 光らせすぎない——掲示板が何枚も並ぶので、広い影を重ねると描画が跳ねる。
+ */
+.signboard-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: #ffffff;
+}
+
+/* ---------- 積んで並べるだけの表示（狭い画面・動きを減らす設定） ---------- */
+
+.blog-flat {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+
+.blog-tower.is-flat {
+  position: static;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto;
+  transform: none;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+@media (min-width: 768px) {
+  .blog-tower.is-flat {
+    max-width: 26rem;
+  }
+
+  .signboard-title {
+    font-size: 0.78rem;
+  }
+
+  .signboard-meta {
+    font-size: 0.62rem;
+  }
+}
+
+/*
+ * 全記事への経路。
+ *
+ * 奥行きシーンは遠い建物を visibility: hidden で落とすので、
+ * そこに置いたリンクはフォーカスも読み上げも受け取れない。
+ * この一覧が「全 10 件へ必ず届く」側を引き受ける。
+ *
+ * display: none や visibility: hidden では隠さない（隠すとフォーカスを
+ * 受け取れず、隠す意味が無くなる）。切り抜きで視覚的にだけ畳んでおき、
+ * タブで入ってきたら実体として現れる。
+ */
+.blog-index {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.blog-index:focus-within {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  width: auto;
+  height: auto;
+  max-height: 60%;
+  overflow-y: auto;
+  clip-path: none;
+  white-space: normal;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--neon-green);
+  background-color: color-mix(in srgb, var(--cyber-black) 94%, transparent);
+}
+
+.blog-index:focus-within ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.blog-index a {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+.blog-index a:focus-visible {
+  outline: 1px solid var(--neon-green);
+  outline-offset: 2px;
+}
+
+.blog-index-meta {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: var(--neon-green);
+  opacity: 0.7;
 }

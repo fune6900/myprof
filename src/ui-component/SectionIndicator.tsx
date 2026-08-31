@@ -51,7 +51,7 @@ export const SectionIndicator = ({ sections, navigator }: SectionIndicatorProps)
                   onClick={() => goTo(index)}
                   aria-label={section.label}
                   aria-current={isActive ? 'true' : undefined}
-                  className={`block h-3 w-3 rounded-full border-neon border-neon-green transition-all duration-300 hover:scale-125 ${
+                  className={`keep-round block h-3 w-3 rounded-full border-neon border-neon-green transition-all duration-300 hover:scale-125 ${
                     isActive ? 'scale-125 bg-neon-green' : 'opacity-50'
                   }`}
                 />

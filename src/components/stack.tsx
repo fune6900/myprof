@@ -175,7 +175,7 @@ const Group = ({ index, title, items, column }: GroupProps) => {
               data-anim="item"
               className="flex w-full items-center gap-2 p-1 sm:w-[calc(50%-0.5rem)]"
             >
-              <div className="text-2xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)] md:text-3xl">
+              <div className="text-2xl drop-shadow-[0_0_10px_rgba(255,85,0,0.85)] md:text-3xl">
                 <item.icon />
               </div>
               <p className="text-base text-neon-white md:text-lg">{item.label}</p>
