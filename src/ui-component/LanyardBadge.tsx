@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { animate, spring, utils } from 'animejs';
-import fune from '../assets/fune.png';
+import fune from '../assets/fune6900.png';
 
 /** 吊り元からカードの留め具までの、力のかかっていない状態の長さ (px) */
 const REST_LENGTH = 190;

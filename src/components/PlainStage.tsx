@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef } from 'react';
 import { animate, createScope, onScroll, stagger, utils, type Scope } from 'animejs';
 import type { SectionNavigator } from '../hooks/useSectionNavigator';
-import type { StageSection } from './DiagonalStage';
+import type { StageSection } from './TunnelStage';
 import { ITEM_DIRECTIONS, TITLE_FROM, TITLE_TO, itemStates } from './animStates';
 import { Marquee } from '../ui-component/Marquee';
 
@@ -80,7 +80,7 @@ export const PlainStage = ({ sections, navigator }: PlainStageProps) => {
   }, [sections, prefersReducedMotion]);
 
   return (
-    <div ref={root}>
+    <div ref={root} className="relative z-30">
       {sections.map((section, index) => (
         <Fragment key={section.id}>
           {/* セクションの継ぎ目に、次のセクション名を流す帯を挟む */}

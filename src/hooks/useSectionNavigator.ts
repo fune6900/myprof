@@ -13,10 +13,20 @@ const SNAP_IDLE_MS = 140;
  * ホイールなら約 90、スワイプなら約 63px 分。
  */
 const COMMIT_RATIO = 0.15;
-/** 1 フレームあたり target へ詰める割合 */
-const EASE_FACTOR = 0.12;
-/** これ以下の差は収束とみなす */
-const SETTLE_EPSILON = 0.0005;
+/**
+ * 1 フレームあたり target へ詰める割合。
+ *
+ * 小さいほど惰性が長く残るが、長すぎると「動きが重い」と感じる。
+ * 0.068（約 1.7 秒）は滑る質感は出るものの、送ってから着くまで待たされた。
+ * 0.105 なら約 1.0 秒で、滑りを残しつつ入力にすぐ応える。
+ */
+const EASE_FACTOR = 0.105;
+/**
+ * これ以下の差は収束とみなす。
+ * 小さすぎると最後の数十フレームが目に見えない移動に費やされ、
+ * 止まりきらない感じが残るので、切り上げを少し早める。
+ */
+const SETTLE_EPSILON = 0.0015;
 
 /**
  * セクション間の移動を司る。
@@ -48,35 +58,56 @@ const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 /**
- * まだその方向へ動かせるスクロール領域を祖先から探す。
- * 見つかった場合はハイジャックせず、そちらに委ねる。
+ * スクロール領域として使える祖先を探す。方向は見ない。
  *
- * @param deltaY 正なら下方向（コンテンツを先へ送る）
+ * overflow が visible のままだと scrollTop は常に 0 で動かせないので、
+ * 実際にスクロールできる指定かどうかを見てから判断する。
  */
-const scrollableAncestor = (
-  node: EventTarget | null,
-  deltaY: number,
-): HTMLElement | null => {
+const findScrollBox = (node: EventTarget | null): HTMLElement | null => {
   let el = node instanceof HTMLElement ? node : null;
 
   while (el) {
     if (el.dataset.scrollable !== undefined) {
-      // overflow が visible のままだと scrollTop は常に 0 で動かせない。
-      // 実際にスクロールできる指定かどうかを見てから判断する
       const overflowY = getComputedStyle(el).overflowY;
-      const canScroll = overflowY === 'auto' || overflowY === 'scroll';
-      const max = el.scrollHeight - el.clientHeight;
-
-      if (canScroll && max > 1) {
-        const top = el.scrollTop;
-        if (deltaY > 0 && top < max - 1) return el;
-        if (deltaY < 0 && top > 1) return el;
-      }
+      if (overflowY === 'auto' || overflowY === 'scroll') return el;
     }
     el = el.parentElement;
   }
 
   return null;
+};
+
+/**
+ * その方向へまだ動かせるか。
+ *
+ * @param deltaY 正なら下方向（コンテンツを先へ送る）
+ */
+const canScrollFurther = (el: HTMLElement, deltaY: number): boolean => {
+  const max = el.scrollHeight - el.clientHeight;
+  if (max <= 1) return false;
+
+  const top = el.scrollTop;
+  if (deltaY > 0) return top < max - 1;
+  if (deltaY < 0) return top > 1;
+  return false;
+};
+
+/**
+ * まだその方向へ動かせるスクロール領域を祖先から探す。
+ * 見つかった場合はハイジャックせず、そちらに委ねる。
+ *
+ * event.target をそのまま辿れば足りる。以前 TunnelStage が perspective を
+ * 使っていたころは target が外側の入れ物に落ちるため elementFromPoint で
+ * 引き直していたが、あれはホイール 1 回ごとに同期レイアウトを強制する。
+ * 奥行きを 2D の scale に置き換えて 3D コンテキストが無くなったので、
+ * その回避策ごと不要になった。
+ */
+const scrollableAncestor = (
+  node: EventTarget | null,
+  deltaY: number,
+): HTMLElement | null => {
+  const box = findScrollBox(node);
+  return box && canScrollFurther(box, deltaY) ? box : null;
 };
 
 /** location.hash からセクション index を引く。該当しなければ null */
@@ -272,6 +303,14 @@ export const useSectionNavigator = (
     if (!hijack) return;
 
     const onWheel = (event: WheelEvent) => {
+      /*
+       * 内側の部品がすでに処理したものは触らない。
+       * カルーセルのように自前でホイールを受けるものは preventDefault を
+       * 済ませてから渡してくるので、それを二重に処理すると
+       * 中身の送りとセクション移動が同時に起きてしまう。
+       */
+      if (event.defaultPrevented) return;
+
       // 内側にまだ動かせるスクロール領域があるならそちらを優先する
       if (scrollableAncestor(event.target, event.deltaY)) return;
 
@@ -340,6 +379,9 @@ export const useSectionNavigator = (
      * 自前で用意する。通常スクロール側では不要（ブラウザに任せる）。
      */
     const onKeyDown = (event: KeyboardEvent) => {
+      // 内側の部品が受け取った矢印キーは奪わない（onWheel と同じ理由）
+      if (event.defaultPrevented) return;
+
       const target = event.target as HTMLElement | null;
       // 入力中のキーは奪わない
       if (target?.closest('input, textarea, select, [contenteditable]')) return;

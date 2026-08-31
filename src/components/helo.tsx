@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { animate, scrambleText } from "animejs";
 import { SocialLinks } from "../ui-component/SocialLinks/SocialLinks";
-import fune from "../assets/fune.png";
+import fune from "../assets/fune6900.png";
 import { FaChevronDown } from "react-icons/fa";
 import { onBootDone } from "../lib/boot";
 
@@ -45,12 +45,35 @@ export const Helo = ({ onAdvance }: HeloProps) => {
       className="relative flex min-h-dvh w-full flex-col items-center justify-center px-4 text-center md:h-full md:min-h-0"
     >
       <div>
-        <img
+        {/*
+          アバターは「アイデンティティ・ディスク」に見立てた円盤。
+          触ると裏返り、裏には同心円のリングと識別名が入っている。
+
+          data-anim="title" は anime.js がセクションの立ち上がりで
+          transform を触るので、外側の箱に付けたまま残す。
+          回転はその内側で行い、2 つの transform がぶつからないようにする。
+        */}
+        <div
           data-anim="title"
-          src={fune}
-          alt="Riku Funagayama Icon"
-          className="mx-auto mb-4 h-24 w-24 rounded-full border-neon border-neon-green md:h-32 md:w-32"
-        />
+          className="disc-scene mx-auto mb-4 h-24 w-24 md:h-32 md:w-32"
+        >
+          <div className="disc-coin">
+            <img
+              src={fune}
+              alt="Riku Funagayama Icon"
+              className="disc-face disc-front keep-round rounded-full border-neon border-neon-green"
+            />
+
+            {/* 裏面。表と同じ大きさの円盤に、リングと識別名を刻む */}
+            <div
+              aria-hidden="true"
+              className="disc-face disc-back keep-round rounded-full border-neon border-neon-green"
+            >
+              <span className="disc-rings" />
+              <span className="disc-tag">FUNE6900</span>
+            </div>
+          </div>
+        </div>
 
         <h1
           ref={name}
@@ -60,7 +83,11 @@ export const Helo = ({ onAdvance }: HeloProps) => {
           Riku Funagayama
         </h1>
 
-        <p data-anim="item" className="mt-3 text-xl text-neon-green md:mt-4 md:text-3xl">
+        {/*
+          地平線の光の帯とちょうど重なる高さにあるので、オレンジだと沈む。
+          パレットのもう一方（純白）で抜く。
+        */}
+        <p data-anim="item" className="mt-3 text-xl text-neon-white md:mt-4 md:text-3xl">
           Stand Out Fit In !!
         </p>
 
@@ -81,10 +108,10 @@ export const Helo = ({ onAdvance }: HeloProps) => {
           event.preventDefault();
           onAdvance();
         }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-neon-green transition duration-300 hover:text-neon-white"
+        className="text-neon-green-all absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce transition duration-300"
         aria-label="Go to next section"
       >
-        <FaChevronDown className="text-3xl drop-shadow-[0_0_10px_rgba(16,255,110,0.8)] md:text-4xl" />
+        <FaChevronDown className="text-3xl drop-shadow-[0_0_10px_rgba(255,85,0,0.85)] md:text-4xl" />
       </a>
     </section>
   );

@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { FaRocket, FaGithub } from "react-icons/fa";
+import { useMemo, useState } from "react";
+import { FaRocket, FaGithub, FaExternalLinkAlt, FaBan } from "react-icons/fa";
 import { SectionHeading } from "./SectionHeading";
+import { HeroCarousel, type HeroCarouselItem } from "./ui/hero-carousel";
 import animeguru from "../assets/animeguru.png";
 import profile from "../assets/fune's_prpfile.png";
 import aniflix from "../assets/aniflix.png";
@@ -25,6 +26,17 @@ type Project = {
 };
 
 /*
+ * カルーセルの背景に被せる色。
+ *
+ * この色は写真の輝度を保ったまま色相を乗せる（color）うえに、
+ * さらに 55% で multiply される。作品のスクリーンショットは
+ * 明るい図版が多いので、鮮やかなオレンジをそのまま渡すと
+ * 背景が主役になって本文も作品も読めなくなる。
+ * 同系のまま暗い側を選び、あくまで背景に留める。
+ */
+const ACCENTS = ["#8a3000", "#a34400", "#732600", "#b85200", "#5c1d00"];
+
+/*
  * 文言と技術スタックは各リポジトリの README / package.json / Gemfile に合わせている。
  */
 const PROJECTS: Project[] = [
@@ -42,7 +54,7 @@ const PROJECTS: Project[] = [
     link: "https://aniflex-zeta.vercel.app/",
     repo: "https://github.com/fune6900/ANIFLIX",
     img: aniflix,
-    desc: "NetflixのUI/UXを模倣したアニメ・声優発見プラットフォーム。TMDb API から日本語UIで探せる。",
+    desc: "NetflixのUI/UXを模倣したアニメ・声優発見プラットフォーム。",
     badges: ["Next.js", "React", "TypeScript", "Tailwind CSS", "TMDb API", "Docker"],
   },
   {
@@ -54,11 +66,11 @@ const PROJECTS: Project[] = [
     badges: ["Next.js", "TypeScript", "Prisma", "Supabase", "Gemini", "Vitest"],
   },
   {
-    title: "fune6900-gallery",
+    title: "Fune6900’s Gallery",
     link: "https://fune6900-gallery.vercel.app/",
     repo: "https://github.com/fune6900/fune6900-gallery",
     img: funeGallery,
-    desc: "WordPress から脱却した、自身のイラスト作品を保管・公開するギャラリーサイト。",
+    desc: "自身のイラスト作品を保管・公開するギャラリーサイト。",
     badges: ["Next.js", "TypeScript", "Supabase", "Cloudflare R2", "Vercel"],
   },
   {
@@ -72,8 +84,33 @@ const PROJECTS: Project[] = [
 ];
 
 export const Projects = () => {
-  /* ホバー中のカード。背景に流す映像を決める */
-  const [active, setActive] = useState<Project | null>(null);
+  /*
+   * 焦点の当たっている作品。カルーセル本体は上流のまま触っていないので、
+   * 外側で index を受け取って導線（公開先 / リポジトリ）をこちらで出す。
+   */
+  const [index, setIndex] = useState(0);
+
+  /*
+   * 作品データをカルーセルの形に写す。
+   *
+   * accent は背景の色被せに使われる。サイト全体がオレンジ 1 色なので、
+   * 同系の中で振り幅だけ持たせて、切り替わりが分かる程度に留める。
+   */
+  const slides = useMemo<HeroCarouselItem[]>(
+    () =>
+      PROJECTS.map((work, i) => ({
+        id: work.title,
+        title: work.title,
+        image: work.img,
+        // サイト名の下は常に説明文。停止中の告知は導線側で出す
+        credit: work.desc,
+        meta: work.badges.slice(0, 3),
+        accent: ACCENTS[i % ACCENTS.length],
+      })),
+    [],
+  );
+
+  const current = PROJECTS[index] ?? PROJECTS[0];
 
   return (
     <section
@@ -82,141 +119,80 @@ export const Projects = () => {
       data-anim-from="top-right"
       className="relative flex min-h-dvh w-full flex-col overflow-hidden px-3 pb-6 pt-20 md:h-full md:min-h-0 md:px-10 md:pb-8 md:pt-24"
     >
-      {/*
-        ホバー中の作品を背景に大きく流す。
-        カードの可読性を保つため暗く落とし、指ではホバーできないので
-        hover を持つ環境だけで有効にする。
-      */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 hidden overflow-hidden [@media(hover:hover)]:block"
-      >
-        {PROJECTS.map((work) => {
-          const isActive = active?.title === work.title;
-          return work.video ? (
-            <video
-              key={work.title}
-              src={work.video}
-              muted
-              loop
-              playsInline
-              // 見えていないものを再生し続けない
-              autoPlay={isActive}
-              className={`absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 ${
-                isActive ? "opacity-25" : ""
-              }`}
-            />
-          ) : (
-            <img
-              key={work.title}
-              src={work.img}
-              alt=""
-              className={`absolute inset-0 h-full w-full scale-105 object-cover opacity-0 blur-[2px] transition-opacity duration-500 ${
-                isActive ? "opacity-20" : ""
-              }`}
-            />
-          );
-        })}
-      </div>
-
       <SectionHeading id="projects-heading" title="Projects" icon={FaRocket} />
 
       {/*
-        画面が低いとカードの最低限の高さが行の高さを超え、見出しへ
-        せり上がって重なっていた。溢れる場合はこの中でスクロールさせる。
-        data-scrollable を付けてあるので、斜め展開モードでも読み切るまで
-        スクロールを横取りされない。
+        カルーセルは自前で全面を使う作りなので、見出しの下の余りを
+        そのまま渡す。min-h-0 を挟まないと flex の子が縮まずに溢れる。
+      */}
+      {/*
+        カルーセルは自前で全面を使う作りなので、見出しの下の余りを渡す。
+        スマホは縦に詰まって箱が潰れるため、最低の高さを持たせる。
       */}
       <div
-        data-scrollable
-        className="relative mt-5 min-h-0 flex-1 md:mt-7 md:overflow-y-auto"
+        data-anim="item"
+        className="relative mt-4 min-h-[26rem] flex-1 md:mt-6 md:min-h-0"
       >
-        <div className="flex min-h-full items-center">
-          <ul className="grid w-full grid-cols-1 gap-6 md:grid-cols-2 md:gap-7 lg:grid-cols-3 lg:gap-8">
-        {PROJECTS.map((item) => (
-          <li
-            key={item.title}
-            data-anim="item"
-            className="relative shrink-0 md:min-h-0 md:shrink"
-            onMouseEnter={() => setActive(item)}
-            onMouseLeave={() => setActive((current) => (current === item ? null : current))}
-          >
-            <a
-              href={item.link}
-              onFocus={() => setActive(item)}
-              onBlur={() => setActive((current) => (current === item ? null : current))}
-              className="spotlight-card relative flex flex-col overflow-hidden rounded-lg border-neon border-neon-green bg-cyber-black/80 p-2 text-left transition-transform duration-300 hover:scale-[1.03] md:h-full md:min-h-0 md:p-3"
-              target="_blank"
-              rel="noopener noreferrer"
-              onMouseMove={(event) => {
-                // カーソル位置を CSS 変数に流して ::after の光を動かす
-                const rect = event.currentTarget.getBoundingClientRect();
-                event.currentTarget.style.setProperty("--mx", `${event.clientX - rect.left}px`);
-                event.currentTarget.style.setProperty("--my", `${event.clientY - rect.top}px`);
-              }}
-            >
-              {/*
-                画像だけが伸縮して余りを吸収する。文字側は潰さない。
-
-                object-contain なのは、作品ごとに画像の縦横比が違うため。
-                cover にすると枠に合わせて切り取られ、下側が見切れてしまう
-                （縦長の myprof は半分以上が切れる）。
-              */}
-              <img
-                src={item.img}
-                alt={`${item.title} トップページ`}
-                loading="lazy"
-                className="aspect-video w-full rounded object-contain md:aspect-auto md:flex-1 md:[min-height:3.5rem]"
-              />
-
-              <h3 className="mt-1.5 flex shrink-0 flex-wrap items-baseline gap-x-2 text-sm font-bold text-neon-white md:text-lg">
-                {item.title}
-                {item.note && (
-                  <span className="text-[0.6rem] font-normal text-neon-green md:text-xs">
-                    （{item.note}）
-                  </span>
-                )}
-              </h3>
-
-              {/*
-                1 列でスクロールできる狭い画面では全文を出す。
-                md 以上は 1 画面に収める都合があるので、低い画面では省く。
-              */}
-              <p className="mt-1 shrink-0 text-[0.65rem] leading-snug text-neon-white md:hidden">
-                {item.desc}
-              </p>
-              <p className="mt-1 hidden shrink-0 text-xs leading-snug text-neon-white md:[@media(min-height:700px)]:line-clamp-2">
-                {item.desc}
-              </p>
-
-              <div className="badge-row mt-1.5 flex shrink-0 flex-wrap gap-1">
-                {item.badges.map((badge) => (
-                  <span key={badge} className="badge">
-                    {badge}
-                  </span>
-                ))}
-              </div>
-            </a>
-
-            {/* リポジトリへの導線。カード全体のリンクとは分ける */}
-            <a
-              href={item.repo}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${item.title} のリポジトリ`}
-              className="absolute right-3 top-3 z-10 text-neon-white transition duration-300 hover:scale-110 hover:text-neon-green md:right-4 md:top-4"
-            >
-              <FaGithub className="text-base md:text-xl" />
-            </a>
-            </li>
-          ))}
-          </ul>
-        </div>
+        {/* brand は出さない。セクション見出しと二重になるため */}
+        <HeroCarousel
+          items={slides}
+          autoplay
+          autoplayDelay={5000}
+          onIndexChange={setIndex}
+          /*
+            absolute inset-0 で親いっぱいに広げる。
+            コンポーネントは h-full で伸びる想定だが、親が flex で
+            高さを決めているとこの割合が解決されず、min-h-[24rem] の
+            384px で止まってしまう（スマホで下に余白が出ていた）。
+          */
+          className="absolute inset-0 border-neon border-neon-green bg-cyber-black"
+        />
       </div>
 
-      <p className="shrink-0 pt-3 text-center text-[0.65rem] text-neon-white md:pt-4 md:text-xs">
-        © Riku Funagayama, All Rights Reserved.
-      </p>
+      {/*
+        公開先とリポジトリへの導線。
+        VISIT / SOURCE だけでは初見で何が起きるか判らないので、
+        行き先（サービス名・GitHub）と「別タブで開く」ことまで文言に出す。
+      */}
+      <div
+        data-anim="item"
+        className="mt-3 flex shrink-0 flex-col items-center justify-center gap-2 md:mt-4 md:flex-row md:gap-4"
+      >
+        {/*
+          公開が止まっている作品はリンクにしない。
+          押せる見た目のまま飛ばせないほうが分かりにくいので、
+          要素ごと span に変えて「開けない」ことを文言で示す。
+        */}
+        {current.note ? (
+          <span
+            className="flex w-full max-w-xs cursor-not-allowed items-center justify-center gap-2 border-neon border-neon-green px-4 py-2 text-xs text-neon-white opacity-45 md:w-auto md:max-w-none md:text-sm"
+          >
+            <FaBan aria-hidden="true" className="shrink-0" />
+            {/* JSX の改行が空白になるので 1 行で組む */}
+            <span>{`${current.title}は${current.note}`}</span>
+          </span>
+        ) : (
+          <a
+            href={current.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full max-w-xs items-center justify-center gap-2 border-neon border-neon-green px-4 py-2 text-xs text-neon-green transition duration-300 hover:scale-[1.03] md:w-auto md:max-w-none md:text-sm"
+          >
+            <FaExternalLinkAlt aria-hidden="true" className="shrink-0" />
+            <span>{current.title} を開く</span>
+          </a>
+        )}
+
+        <a
+          href={current.repo}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full max-w-xs items-center justify-center gap-2 border-neon border-neon-green px-4 py-2 text-xs text-neon-white transition duration-300 hover:scale-[1.03] md:w-auto md:max-w-none md:text-sm"
+        >
+          <FaGithub aria-hidden="true" className="shrink-0" />
+          <span>GitHub でソースを見る</span>
+        </a>
+      </div>
     </section>
   );
 };

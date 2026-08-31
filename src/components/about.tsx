@@ -87,7 +87,7 @@ const Hobby = ({ label, icon }: { label: string; icon: string }) => (
     >
       {icon}
     </span>
-    <span className="text-neon-blue transition-colors duration-300 group-hover:text-neon-green group-hover:drop-shadow-[0_0_12px_rgba(0,255,194,0.9)]">
+    <span className="text-neon-blue transition-colors duration-300 group-hover:text-neon-green group-hover:drop-shadow-[0_0_12px_rgba(0,255,255,0.9)]">
       &quot;{label}&quot;
     </span>
   </span>

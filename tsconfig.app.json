@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    /* 取り込んだコンポーネントが使う "@/..." を src へ向ける（vite.config.ts と揃える） */
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"] },
+
     "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],

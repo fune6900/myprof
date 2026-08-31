@@ -1,13 +1,17 @@
 import { useMemo } from 'react';
-import { DiagonalStage, type StageSection } from './components/DiagonalStage';
+import { TunnelStage, type StageSection } from './components/TunnelStage';
 import { PlainStage } from './components/PlainStage';
-import { NeonGrid } from './components/NeonGrid';
+import { SynthwaveSky } from './scene/SynthwaveSky';
+import { GridFloor } from './scene/GridFloor';
+import { CyberCity } from './city/CyberCity';
 import { SectionIndicator } from './ui-component/SectionIndicator';
 import { SiteHeader } from './ui-component/SiteHeader';
 import { Opening } from './ui-component/Opening';
 import { CursorFollower } from './ui-component/CursorFollower';
+import { Equalizer } from './ui-component/Equalizer';
 import ScrollComponent from './ui-component/ScrollComponent/ScrollComponent';
 import { useSectionNavigator } from './hooks/useSectionNavigator';
+import { NavigatorContext } from './hooks/navigatorContext';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { Helo } from './components/helo';
 import { About } from './components/about';
@@ -29,14 +33,14 @@ const SECTION_IDS = [
 ] as const;
 
 /**
- * 斜め展開に切り替える下限。
+ * 奥行き移動に切り替える下限。
  * スマホでスクロールを横取りすると慣性スクロールと競合して操作しづらいので、
  * 狭い画面では普通の縦スクロールに任せる。
  */
-const DIAGONAL_QUERY = '(min-width: 768px)';
+const TUNNEL_QUERY = '(min-width: 768px)';
 
 function App() {
-  const hijack = useMediaQuery(DIAGONAL_QUERY);
+  const hijack = useMediaQuery(TUNNEL_QUERY);
   const navigator = useSectionNavigator(SECTION_IDS, hijack);
   const { goTo, activeIndex } = navigator;
 
@@ -54,19 +58,29 @@ function App() {
   );
 
   return (
-    <div className="dotgothic16">
-      <NeonGrid navigator={navigator} />
-      <SectionIndicator sections={sections} navigator={navigator} />
-      <SiteHeader sections={sections} navigator={navigator} />
-      <ScrollComponent onBackToTop={() => goTo(0)} atTop={activeIndex === 0} />
-      <CursorFollower />
-      <Opening />
-      {hijack ? (
-        <DiagonalStage sections={sections} navigator={navigator} />
-      ) : (
-        <PlainStage sections={sections} navigator={navigator} />
-      )}
-    </div>
+    // 奥のセクションが ScrollScene で進行度を拾えるように配っておく
+    <NavigatorContext.Provider value={navigator}>
+      <div className="dotgothic16">
+        {/* 地平線より上（ほぼ静止画） → 床（canvas） → 街（3D）の順に重ねる */}
+        <SynthwaveSky />
+        <GridFloor navigator={navigator} />
+        <CyberCity navigator={navigator} sectionCount={SECTION_IDS.length} />
+        <Equalizer navigator={navigator} />
+        <SectionIndicator sections={sections} navigator={navigator} />
+        <SiteHeader sections={sections} navigator={navigator} />
+        <ScrollComponent onBackToTop={() => goTo(0)} atTop={activeIndex === 0} />
+        <CursorFollower />
+        <Opening />
+        {hijack ? (
+          <TunnelStage sections={sections} navigator={navigator} />
+        ) : (
+          <PlainStage sections={sections} navigator={navigator} />
+        )}
+
+        {/* すべての上に重ねる。下の内容をぼかして screen で足し戻すだけ */}
+        <div className="scene-bloom" aria-hidden="true" />
+      </div>
+    </NavigatorContext.Provider>
   );
 }
 

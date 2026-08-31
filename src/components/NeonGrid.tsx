@@ -29,7 +29,7 @@ export const NeonGrid = ({ navigator }: NeonGridProps) => {
   );
 
   // z-index は付けない。負の値にすると body の不透明な背景より下に
-  // 描画されて見えなくなるため、DOM 順で DiagonalStage の下に敷く
+  // 描画されて見えなくなるため、DOM 順でステージの下に敷く
   return (
     <div
       className="neon-grid-viewport pointer-events-none fixed inset-0 overflow-hidden"
